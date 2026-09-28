@@ -5,6 +5,9 @@ set(CMAKE_C_STANDARD 11)
 
 find_package(raylib REQUIRED)
 
-add_executable(cshooter main.c)
+add_executable(cshooter main.c
+        common.h
+        player.h
+        player.c)
 
 target_link_libraries(cshooter PRIVATE raylib m)

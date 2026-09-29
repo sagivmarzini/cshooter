@@ -1,14 +1,14 @@
 #include "player.h"
 
-Player InitPlayer(const char *texturePath) {
+Player init_player(const char* texture_path) {
     Player player = {0};
-    player.texture = LoadTexture(texturePath);
+    player.texture = LoadTexture(texture_path);
     player.entity.pos = (Vector2){SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
     player.entity.active = true;
     return player;
 }
 
-void UpdatePlayer(Player *player, float dt) {
+void update_player(Player* player, BulletManager* bm, float dt) {
     Vector2 direction = {0.0f, 0.0f};
 
     if (IsKeyDown(KEY_D)) direction.x += 1.0f;
@@ -22,9 +22,18 @@ void UpdatePlayer(Player *player, float dt) {
 
     Vector2 mousePos = GetMousePosition();
     player->entity.rotation = atan2f(mousePos.y - player->entity.pos.y, mousePos.x - player->entity.pos.x) * RAD2DEG;
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 gun_offset = {
+            GUN_BARREL_OFFSET * cosf(player->entity.rotation * DEG2RAD),
+            GUN_BARREL_OFFSET * sinf(player->entity.rotation * DEG2RAD)
+        };
+
+        spawn_bullet(bm, Vector2Add(player->entity.pos, gun_offset), player->entity.rotation);
+    }
 }
 
-void DrawPlayer(const Player *player) {
+void draw_player(const Player* player) {
     Rectangle sourceRec = {0.0f, 0.0f, (float) player->texture.width, (float) player->texture.height};
     Rectangle destRec = {
         player->entity.pos.x, player->entity.pos.y, (float) player->texture.width, (float) player->texture.height
@@ -34,6 +43,6 @@ void DrawPlayer(const Player *player) {
     DrawTexturePro(player->texture, sourceRec, destRec, origin, player->entity.rotation, WHITE);
 }
 
-void UnloadPlayer(Player *player) {
+void unload_player(Player* player) {
     UnloadTexture(player->texture);
 }

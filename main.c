@@ -1,3 +1,4 @@
+#include "bullet.h"
 #include "common.h"
 #include "player.h"
 
@@ -5,24 +6,27 @@ int main(void) {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "C Shooter");
     SetTargetFPS(GAME_FPS);
 
-    Player player = InitPlayer("../assets/cop.png");
+    Player player = init_player("../assets/cop.png");
+    BulletManager bm = init_bullet_manager("../assets/bullet.png");
 
     while (!WindowShouldClose()) {
         // Update
         float dt = GetFrameTime();
-        UpdatePlayer(&player, dt);
+        update_player(&player, &bm, dt);
+        update_bullets(&bm, dt);
 
         // Draw
         BeginDrawing();
-        ClearBackground(RAYWHITE);
+        ClearBackground((Color){10, 10, 10, 255});
 
-        DrawPlayer(&player);
+        draw_player(&player);
+        draw_bullets(&bm);
 
         EndDrawing();
     }
 
     // Cleanup
-    UnloadPlayer(&player);
+    unload_player(&player);
     CloseWindow();
 
     return 0;

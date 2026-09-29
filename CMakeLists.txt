@@ -8,6 +8,8 @@ find_package(raylib REQUIRED)
 add_executable(cshooter main.c
         common.h
         player.h
-        player.c)
+        player.c
+        bullet.h
+        bullet.c)
 
 target_link_libraries(cshooter PRIVATE raylib m)

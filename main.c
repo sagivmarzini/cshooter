@@ -1,5 +1,6 @@
 #include "bullet.h"
 #include "common.h"
+#include "enemy.h"
 #include "player.h"
 
 int main(void) {
@@ -7,12 +8,14 @@ int main(void) {
     SetTargetFPS(GAME_FPS);
 
     Player player = init_player("../assets/cop.png");
+    Enemy enemy = init_enemy("../assets/thug.png");
     BulletManager bm = init_bullet_manager("../assets/bullet.png");
 
     while (!WindowShouldClose()) {
         // Update
         float dt = GetFrameTime();
         update_player(&player, &bm, dt);
+        update_enemy(&enemy, &player, dt);
         update_bullets(&bm, dt);
 
         // Draw
@@ -20,6 +23,7 @@ int main(void) {
         ClearBackground((Color){10, 10, 10, 255});
 
         draw_player(&player);
+        draw_enemy(&enemy);
         draw_bullets(&bm);
 
         EndDrawing();

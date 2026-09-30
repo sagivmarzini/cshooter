@@ -6,6 +6,8 @@
 
 #include <raymath.h>
 
+#include "my_math.h"
+
 
 BulletManager init_bullet_manager(const char* texture_path) {
 	BulletManager bm = {0};
@@ -40,23 +42,29 @@ void spawn_bullet(BulletManager* bm, Vector2 position, float angle_deg) {
 	}
 }
 
-void update_bullets(BulletManager* bm, float dt) {
+void update_bullets(BulletManager* bm, Enemy* enemy, float dt) {
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		if (!bm->bullets[i].entity.active) continue;
 
-		Bullet* b = &bm->bullets[i];
+		Bullet* bullet = &bm->bullets[i];
 
-		// 1. Update position
-		b->entity.pos = Vector2Add(b->entity.pos, Vector2Scale(b->entity.vel, dt));
+		bullet->entity.pos = Vector2Add(bullet->entity.pos, Vector2Scale(bullet->entity.vel, dt));
 
-		// 2. Countdown lifetime
-		b->life_timer -= dt;
+		bullet->life_timer -= dt;
 
-		// 3. Deactivate if lifetime expires or goes off-screen
-		if (b->life_timer <= 0.0f ||
-		    b->entity.pos.x < 0 || b->entity.pos.x > SCREEN_WIDTH ||
-		    b->entity.pos.y < 0 || b->entity.pos.y > SCREEN_HEIGHT) {
-			b->entity.active = false;
+		// Deactivate if lifetime expires or goes off-screen
+		if (bullet->life_timer <= 0.0f ||
+		    bullet->entity.pos.x < 0 || bullet->entity.pos.x > SCREEN_WIDTH ||
+		    bullet->entity.pos.y < 0 || bullet->entity.pos.y > SCREEN_HEIGHT) {
+			bullet->entity.active = false;
+		}
+
+		// if (CheckCollisionPointCircle(bullet->entity.pos, enemy->entity.pos, 32) && enemy->combat.health > 0) {
+		if (CheckCollisionPointRotatedRect(bullet->entity.pos, enemy->entity.pos, 32, 64, enemy->entity.rotation)
+		    && enemy->combat.health > 0) {
+			hit_enemy(enemy, BULLET_DAMAGE, bullet->entity.rotation);
+
+			bullet->entity.active = false;
 		}
 	}
 }

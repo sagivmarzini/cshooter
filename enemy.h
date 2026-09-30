@@ -14,7 +14,7 @@
 
 typedef struct {
 	Entity entity;
-	float hit_cooldown;
+	Combatant combat;
 	Texture2D texture;
 } Enemy;
 
@@ -25,5 +25,7 @@ void update_enemy(Enemy* enemy, Player* player, float dt);
 void draw_enemy(const Enemy* enemy);
 
 void unload_enemy(Enemy* enemy);
+
+void hit_enemy(Enemy* enemy, int damage, float angle);
 
 #endif //CSHOOTER_ENEMY_H

@@ -1,5 +1,6 @@
 #include "player.h"
 
+#include "bullet.h"
 #include "raymath.h"
 
 Player init_player(const char* texture_path) {
@@ -7,7 +8,7 @@ Player init_player(const char* texture_path) {
 	player.texture = LoadTexture(texture_path);
 	player.entity.pos = (Vector2){SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
 	player.entity.active = true;
-	player.entity.health = PLAYER_HEALTH;
+	player.combat.health = PLAYER_HEALTH;
 	return player;
 }
 
@@ -23,18 +24,7 @@ void update_player(Player* player, BulletManager* bm, float dt) {
 	player->entity.vel = Vector2Scale(dir, PLAYER_SPEED);
 	player->entity.pos = Vector2Add(player->entity.pos, Vector2Scale(player->entity.vel, dt));
 
-	// knockback
-	player->entity.pos = Vector2Add(
-		player->entity.pos,
-		Vector2Scale(player->knockback_vel, dt)
-	);
-
-	float decay = expf(-KNOCKBACK_FRICTION * dt);
-	player->knockback_vel = Vector2Scale(player->knockback_vel, decay);
-
-	if (Vector2LengthSqr(player->knockback_vel) < 100.0f) {
-		player->knockback_vel = (Vector2){0};
-	}
+	apply_knockback(&player->entity, &player->combat, dt);
 
 	Vector2 mousePos = GetMousePosition();
 	player->entity.rotation = atan2f(mousePos.y - player->entity.pos.y, mousePos.x - player->entity.pos.x) * RAD2DEG;
@@ -57,9 +47,9 @@ void draw_player(const Player* player) {
 	Vector2 origin = {(float) player->texture.width / 2.0f - 8, (float) player->texture.height / 2.0f};
 
 	DrawTexturePro(player->texture, sourceRec, destRec, origin, player->entity.rotation,
-	               Vector2Equals(player->knockback_vel, (Vector2){0, 0}) ? WHITE : MAROON);
+	               Vector2Equals(player->combat.knockback_vel, (Vector2){0, 0}) ? WHITE : MAROON);
 	DrawRectangle((int) player->entity.pos.x - 48, (int) player->entity.pos.y - 64, 96, 10, GRAY);
-	DrawRectangle((int) player->entity.pos.x - 48, (int) player->entity.pos.y - 64, 96 * player->entity.health / 100,
+	DrawRectangle((int) player->entity.pos.x - 48, (int) player->entity.pos.y - 64, 96 * player->combat.health / 100,
 	              10, GREEN);
 }
 
@@ -68,13 +58,8 @@ void unload_player(Player* player) {
 }
 
 void melee_hit_player(Player* player, int damage, float angle) {
-	player->entity.health -= damage;
+	player->combat.health -= damage;
 
-	float angleRad = angle * DEG2RAD;
-	Vector2 direction = {cosf(angleRad), sinf(angleRad)};
-
-	player->knockback_vel = Vector2Add(
-		player->knockback_vel,
-		Vector2Scale(direction, KNOCKBACK_FORCE)
-	);
+	player->combat.knockback_vel = calculate_knockback_velocity(player->combat.knockback_vel, angle,
+	                                                            MELEE_KNOCKBACK_FORCE);
 }

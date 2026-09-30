@@ -1,19 +1,21 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "bullet.h"
 #include "common.h"
 
 #define PLAYER_SPEED 200.0f
 #define PLAYER_HEALTH 100
 #define GUN_BARREL_OFFSET 34 // the distance between the center of the sprite and the tip of its gun
-#define KNOCKBACK_FORCE   800.0f   // initial push speed
+#define MELEE_KNOCKBACK_FORCE   800.0f   // initial push speed
+#define BULLET_KNOCKBACK_FORCE   150.0f
 #define KNOCKBACK_FRICTION 6.0f    // higher = stops faster
+
+typedef struct BulletManager BulletManager;
 
 typedef struct {
 	Entity entity;
+	Combatant combat;
 	Texture2D texture;
-	Vector2 knockback_vel;
 } Player;
 
 Player init_player(const char* texture_path);

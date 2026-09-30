@@ -8,15 +8,19 @@
 #include "player.h"
 
 #define ENEMY_SPEED 100.0f
+#define ENEMY_MELEE_ATTACK_DISTANCE 64.0f
+#define ENEMY_MELEE_ATTACK_DAMAGE 24.f
+#define ENEMY_HIT_COOLDOWN 1 // in seconds
 
 typedef struct {
-    Entity entity;
-    Texture2D texture;
+	Entity entity;
+	float hit_cooldown;
+	Texture2D texture;
 } Enemy;
 
 Enemy init_enemy(const char* texture_path);
 
-void update_enemy(Enemy* enemy, const Player* player, float dt);
+void update_enemy(Enemy* enemy, Player* player, float dt);
 
 void draw_enemy(const Enemy* enemy);
 

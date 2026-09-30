@@ -11,7 +11,7 @@ int main(void) {
     Enemy enemy = init_enemy("../assets/thug.png");
     BulletManager bm = init_bullet_manager("../assets/bullet.png");
 
-    while (!WindowShouldClose()) {
+    while (!WindowShouldClose() && player.entity.health > 0) {
         // Update
         float dt = GetFrameTime();
         update_player(&player, &bm, dt);

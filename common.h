@@ -2,7 +2,6 @@
 #define COMMON_H
 
 #include "raylib.h"
-#include "raymath.h"
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 600
@@ -10,10 +9,11 @@
 #define MAX_BULLETS 100
 
 typedef struct {
-    Vector2 pos;
-    Vector2 vel;
-    float rotation;
-    bool active;
+	int health;
+	Vector2 pos;
+	Vector2 vel;
+	float rotation;
+	bool active;
 } Entity;
 
 #endif // COMMON_H

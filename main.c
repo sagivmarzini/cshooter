@@ -1,12 +1,14 @@
 #include "bullet.h"
 #include "common.h"
 #include "enemy.h"
+#include "map.h"
 #include "player.h"
 
 int main(void) {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "C Shooter");
 	SetTargetFPS(GAME_FPS);
 
+	Map map = map_init();
 	Player player = init_player("../assets/cop.png");
 	EnemyManager enemies = init_enemy_manager("../assets/thug.png");
 	BulletManager bullets = init_bullet_manager("../assets/bullet.png");
@@ -22,11 +24,13 @@ int main(void) {
 		}
 		if (IsKeyPressed(KEY_SPACE)) paused = !paused;
 		if (IsKeyPressed(KEY_E)) spawn_enemy(&enemies);
+		if (IsKeyPressed(KEY_R)) map = map_init();
 
 		// Draw
 		BeginDrawing();
 		ClearBackground((Color){10, 10, 10, 255});
 
+		map_draw(&map);
 		draw_player(&player);
 		draw_enemies(&enemies);
 		draw_bullets(&bullets);

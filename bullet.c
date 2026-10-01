@@ -14,10 +14,6 @@ BulletManager init_bullet_manager(const char* texture_path) {
 
 	bm.bullet_texture = LoadTexture(texture_path);
 
-	for (int i = 0; i < MAX_BULLETS; i++) {
-		bm.bullets[i].entity.active = false;
-	}
-
 	return bm;
 }
 

@@ -15,6 +15,9 @@ add_executable(cshooter main.c
         enemy.c
         common.c
         my_math.h
-        my_math.c)
+        my_math.c
+        map.h
+        map.h
+        map.c)
 
 target_link_libraries(cshooter PRIVATE raylib m)

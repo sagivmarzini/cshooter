@@ -42,11 +42,10 @@ void spawn_bullet(BulletManager* bm, Vector2 position, float angle_deg) {
 	}
 }
 
-void update_bullets(BulletManager* bm, Enemy* enemy, float dt) {
+void update_bullets(BulletManager* bm, Enemy enemies[], float dt) {
 	for (int i = 0; i < MAX_BULLETS; i++) {
-		if (!bm->bullets[i].entity.active) continue;
-
 		Bullet* bullet = &bm->bullets[i];
+		if (!bullet->entity.active) continue;
 
 		bullet->entity.pos = Vector2Add(bullet->entity.pos, Vector2Scale(bullet->entity.vel, dt));
 
@@ -59,12 +58,14 @@ void update_bullets(BulletManager* bm, Enemy* enemy, float dt) {
 			bullet->entity.active = false;
 		}
 
-		// if (CheckCollisionPointCircle(bullet->entity.pos, enemy->entity.pos, 32) && enemy->combat.health > 0) {
-		if (CheckCollisionPointRotatedRect(bullet->entity.pos, enemy->entity.pos, 32, 64, enemy->entity.rotation)
-		    && enemy->combat.health > 0) {
-			hit_enemy(enemy, BULLET_DAMAGE, bullet->entity.rotation);
+		for (int i = 0; i < MAX_ENEMIES; i++) {
+			Enemy* enemy = &enemies[i];
+			if (CheckCollisionPointRotatedRect(bullet->entity.pos, enemy->entity.pos, 32, 64, enemy->entity.rotation)
+			    && enemy->combat.health > 0) {
+				hit_enemy(enemy, BULLET_DAMAGE, bullet->entity.rotation);
 
-			bullet->entity.active = false;
+				bullet->entity.active = false;
+			}
 		}
 	}
 }
@@ -74,8 +75,8 @@ void draw_bullets(const BulletManager* bm) {
 		if (bm->bullets[i].entity.active) {
 			Rectangle sourceRec = {0.0f, 0.0f, (float) bm->bullet_texture.width, (float) bm->bullet_texture.height};
 			Rectangle destRec = {
-				bm->bullets[i].entity.pos.x, bm->bullets[i].entity.pos.y, (float) bm->bullet_texture.width,
-				(float) bm->bullet_texture.height
+				bm->bullets[i].entity.pos.x, bm->bullets[i].entity.pos.y, (float) bm->bullet_texture.width * 2,
+				(float) bm->bullet_texture.height * 2
 			};
 			Vector2 origin = {(float) bm->bullet_texture.width / 2.0f, (float) bm->bullet_texture.height / 2.0f};
 

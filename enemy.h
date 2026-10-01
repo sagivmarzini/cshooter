@@ -7,6 +7,7 @@
 #include "common.h"
 #include "player.h"
 
+#define MAX_ENEMIES 48
 #define ENEMY_SPEED 100.0f
 #define ENEMY_MELEE_ATTACK_DISTANCE 64.0f
 #define ENEMY_MELEE_ATTACK_DAMAGE 24.f
@@ -15,16 +16,22 @@
 typedef struct {
 	Entity entity;
 	Combatant combat;
-	Texture2D texture;
 } Enemy;
 
-Enemy init_enemy(const char* texture_path);
+typedef struct {
+	Enemy enemies[MAX_ENEMIES];
+	Texture2D texture;
+} EnemyManager;
 
-void update_enemy(Enemy* enemy, Player* player, float dt);
+EnemyManager init_enemy_manager(const char* texture_path);
 
-void draw_enemy(const Enemy* enemy);
+void spawn_enemy(EnemyManager* em);
 
-void unload_enemy(Enemy* enemy);
+void update_enemies(EnemyManager* em, Player* player, float dt);
+
+void draw_enemies(const EnemyManager* em);
+
+void unload_enemies(EnemyManager* em);
 
 void hit_enemy(Enemy* enemy, int damage, float angle);
 

@@ -5,7 +5,7 @@
 
 #define PLAYER_SPEED 200.0f
 #define PLAYER_HEALTH 100
-#define GUN_BARREL_OFFSET 34 // the distance between the center of the sprite and the tip of its gun
+#define GUN_BARREL_OFFSET 32 // the distance between the center of the sprite and the tip of its gun
 #define MELEE_KNOCKBACK_FORCE   800.0f   // initial push speed
 #define BULLET_KNOCKBACK_FORCE   150.0f
 #define KNOCKBACK_FRICTION 6.0f    // higher = stops faster

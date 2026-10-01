@@ -8,29 +8,28 @@ int main(void) {
 	SetTargetFPS(GAME_FPS);
 
 	Player player = init_player("../assets/cop.png");
-	Enemy enemy = init_enemy("../assets/thug.png");
-	BulletManager bm = init_bullet_manager("../assets/bullet.png");
+	EnemyManager enemies = init_enemy_manager("../assets/thug.png");
+	BulletManager bullets = init_bullet_manager("../assets/bullet.png");
 
 	bool paused = false;
 	while (!WindowShouldClose() && player.combat.health > 0) {
 		// Update
 		float dt = GetFrameTime();
 		if (!paused) {
-			update_player(&player, &bm, dt);
-			update_enemy(&enemy, &player, dt);
-			update_bullets(&bm, &enemy, dt);
+			update_player(&player, &bullets, dt);
+			update_enemies(&enemies, &player, dt);
+			update_bullets(&bullets, enemies.enemies, dt);
 		}
-		if (IsKeyPressed(KEY_ONE)) enemy.combat.health = 100;
-		if (IsKeyPressed(KEY_TWO)) enemy.combat.health = 200;
 		if (IsKeyPressed(KEY_SPACE)) paused = !paused;
+		if (IsKeyPressed(KEY_E)) spawn_enemy(&enemies);
 
 		// Draw
 		BeginDrawing();
 		ClearBackground((Color){10, 10, 10, 255});
 
 		draw_player(&player);
-		draw_enemy(&enemy);
-		draw_bullets(&bm);
+		draw_enemies(&enemies);
+		draw_bullets(&bullets);
 
 		EndDrawing();
 	}

@@ -25,7 +25,7 @@ BulletManager init_bullet_manager(const char* texture_path);
 
 void spawn_bullet(BulletManager* bm, Vector2 position, float angle_deg);
 
-void update_bullets(BulletManager* bm, Enemy* enemy, float dt);
+void update_bullets(BulletManager* bm, Enemy enemies[], float dt);
 
 void draw_bullets(const BulletManager* bm);
 

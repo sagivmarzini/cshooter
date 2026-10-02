@@ -12,13 +12,13 @@ Player init_player(const char* texture_path, const Map* map) {
 	player.entity.active = true;
 	player.combat.health = PLAYER_HEALTH;
 
-	while (tile_at(map, player.entity.pos.x / TILE_SIZE, player.entity.pos.y / TILE_SIZE) == TILE_BUILDING)
-		player.entity.pos.x -= TILE_SIZE / 2;
+	while (check_map_collision(map, player.entity.pos))
+		player.entity.pos.x -= TILE_SIZE / 2.f;
 
 	return player;
 }
 
-void update_player(Player* player, BulletManager* bm, float dt) {
+void update_player(Player* player, BulletManager* bm, const Map* map, float dt) {
 	Vector2 direction = {0.0f, 0.0f};
 
 	if (IsKeyDown(KEY_D)) direction.x += 1.0f;
@@ -28,7 +28,10 @@ void update_player(Player* player, BulletManager* bm, float dt) {
 
 	Vector2 dir = Vector2Normalize(direction);
 	player->entity.vel = Vector2Scale(dir, PLAYER_SPEED);
+	Vector2 old_pos = player->entity.pos;
 	player->entity.pos = Vector2Add(player->entity.pos, Vector2Scale(player->entity.vel, dt));
+	if (check_map_collision(map, player->entity.pos))
+		player->entity.pos = old_pos;
 
 	apply_knockback(&player->entity, &player->combat, dt);
 

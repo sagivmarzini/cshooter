@@ -25,9 +25,9 @@ typedef struct {
 
 EnemyManager init_enemy_manager(const char* texture_path);
 
-void spawn_enemy(EnemyManager* em);
+void spawn_enemy(EnemyManager* em, const Map* map);
 
-void update_enemies(EnemyManager* em, Player* player, float dt);
+void update_enemies(EnemyManager* em, Player* player, const Map* map, float dt);
 
 void draw_enemies(const EnemyManager* em);
 

@@ -1,6 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "map.h"
 #include "raylib.h"
 
 #define SCREEN_WIDTH 1000
@@ -26,6 +27,8 @@ typedef struct {
 Vector2 calculate_knockback_velocity(Vector2 knockback_vel, float angle, float force);
 
 void apply_knockback(Entity* entity, Combatant* combatant, float dt);
+
+bool check_map_collision(const Map* map, Vector2 position);
 
 
 #endif // COMMON_H

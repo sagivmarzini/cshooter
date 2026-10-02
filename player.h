@@ -21,7 +21,7 @@ typedef struct {
 
 Player init_player(const char* texture_path, const Map* map);
 
-void update_player(Player* player, BulletManager* bm, float dt);
+void update_player(Player* player, BulletManager* bm, const Map* map, float dt);
 
 void draw_player(const Player* player);
 

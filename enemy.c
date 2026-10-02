@@ -13,16 +13,20 @@ EnemyManager init_enemy_manager(const char* texture_path) {
 	return em;
 }
 
-void spawn_enemy(EnemyManager* em) {
+void spawn_enemy(EnemyManager* em, const Map* map) {
 	for (int i = 0; i < MAX_ENEMIES; i++) {
 		if (!em->enemies[i].entity.active) {
 			Enemy* enemy = &em->enemies[i];
 			*enemy = (Enemy){0};
 
+			int spawn_direction = GetRandomValue(0, 1) ? -1 : 1;
 			enemy->entity.pos = GetScreenToWorld2D((Vector2){
-				                                       GetRandomValue(0, 1) ? -100 : SCREEN_WIDTH + 100,
+				                                       spawn_direction == -1 ? -100 : SCREEN_WIDTH + 100,
 				                                       GetRandomValue(0, SCREEN_HEIGHT)
 			                                       }, *camera_get());
+			while (check_map_collision(map, enemy->entity.pos))
+				enemy->entity.pos.x += spawn_direction * TILE_SIZE / 2.f;
+
 			enemy->combat.health = PLAYER_HEALTH;
 			enemy->entity.active = true;
 
@@ -31,7 +35,7 @@ void spawn_enemy(EnemyManager* em) {
 	}
 }
 
-void update_enemies(EnemyManager* em, Player* player, float dt) {
+void update_enemies(EnemyManager* em, Player* player, const Map* map, float dt) {
 	for (int i = 0; i < MAX_ENEMIES; i++) {
 		Enemy* enemy = &em->enemies[i];
 		if (!enemy->entity.active) continue;
@@ -48,7 +52,10 @@ void update_enemies(EnemyManager* em, Player* player, float dt) {
 		float player_distance = Vector2Length(Vector2Subtract(enemy->entity.pos, player->entity.pos));
 		if (player_distance > ENEMY_MELEE_ATTACK_DISTANCE) {
 			enemy->entity.vel = Vector2Scale(direction, ENEMY_SPEED);
+
+			const Vector2 old_pos = enemy->entity.pos;
 			enemy->entity.pos = Vector2Add(enemy->entity.pos, Vector2Scale(enemy->entity.vel, dt));
+			if (check_map_collision(map, enemy->entity.pos)) enemy->entity.pos = old_pos;
 		} else if (enemy->combat.attack_cooldown <= 0) {
 			melee_hit_player(player, ENEMY_MELEE_ATTACK_DAMAGE, enemy->entity.rotation);
 

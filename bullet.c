@@ -39,7 +39,7 @@ void spawn_bullet(BulletManager* bm, Vector2 position, float angle_deg) {
 	}
 }
 
-void update_bullets(BulletManager* bm, Enemy enemies[], float dt) {
+void update_bullets(BulletManager* bm, Enemy enemies[], const Map* map, float dt) {
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		Bullet* bullet = &bm->bullets[i];
 		if (!bullet->entity.active) continue;
@@ -52,7 +52,8 @@ void update_bullets(BulletManager* bm, Enemy enemies[], float dt) {
 		Vector2 bullet_screen_pos = GetWorldToScreen2D(bullet->entity.pos, *camera_get());
 		if (bullet->life_timer <= 0.0f ||
 		    bullet_screen_pos.x < 0 || bullet_screen_pos.x > SCREEN_WIDTH ||
-		    bullet_screen_pos.y < 0 || bullet_screen_pos.y > SCREEN_HEIGHT) {
+		    bullet_screen_pos.y < 0 || bullet_screen_pos.y > SCREEN_HEIGHT ||
+		    check_map_collision(map, bullet->entity.pos)) {
 			bullet->entity.active = false;
 		}
 

@@ -9,6 +9,7 @@ int main(void) {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "C Shooter");
 	SetTargetFPS(GAME_FPS);
 
+	// TODO: outsource game context to struct
 	static Map map; // static: too big for the stack
 	static TileAtlas atlas;
 	atlas_load(&atlas);
@@ -23,12 +24,12 @@ int main(void) {
 		// Update
 		float dt = GetFrameTime();
 		if (!paused) {
-			update_player(&player, &bullets, dt);
-			update_enemies(&enemies, &player, dt);
-			update_bullets(&bullets, enemies.enemies, dt);
+			update_player(&player, &bullets, &map, dt);
+			update_enemies(&enemies, &player, &map, dt);
+			update_bullets(&bullets, enemies.enemies, &map, dt);
 		}
 		if (IsKeyPressed(KEY_SPACE)) paused = !paused;
-		if (IsKeyPressed(KEY_E)) spawn_enemy(&enemies);
+		if (IsKeyPressed(KEY_E)) spawn_enemy(&enemies, &map);
 		if (IsKeyPressed(KEY_KP_ADD)) camera_get()->zoom = 1.f;
 		if (IsKeyPressed(KEY_KP_SUBTRACT)) camera_get()->zoom = 0.1f;
 

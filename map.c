@@ -96,27 +96,87 @@ static void map_generate_city(Map* map) {
 	bsp_recursive_split(map, 0, 0);
 }
 
-Map map_init() {
+Map map_init(const char* road_texture, const char* striped_road_texture) {
 	Map map = {0};
+	map.road_texture = LoadTexture(road_texture);
+	map.striped_road_texture = LoadTexture(striped_road_texture);
 
 	map_generate_city(&map);
 
 	return map;
 }
 
-void map_draw(Map* map) {
-	// int tile_size = SCREEN_HEIGHT / MAP_HEIGHT;
-	int tile_size = 192;
-	for (int x = 0; x < MAP_WIDTH; x++) {
-		for (int y = 0; y < MAP_HEIGHT; ++y) {
-			TileType type = map->map[x][y];
-			if (!type) type = TILE_ROAD;
+void map_draw(const Map* map) {
+	enum { TILE_SIZE = 192, MAX_LOOKAHEAD = 4 };
 
-			Color color = WHITE;
-			if (type == TILE_GRASS) color = GREEN;
-			if (type == TILE_ROAD) color = GRAY;
-			if (type == TILE_BUILDING) color = MAROON;
-			DrawRectangle(x * tile_size, y * tile_size, tile_size, tile_size, color);
+	// Compass directions in clockwise order. The stripe sits on the east edge
+	// at 0 degrees, so (direction * 90) is the rotation that puts it on that side.
+	enum { EAST, SOUTH, WEST, NORTH, DIRECTION_COUNT };
+	static const int STEP_X[DIRECTION_COUNT] = {1, 0, -1, 0};
+	static const int STEP_Y[DIRECTION_COUNT] = {0, 1, 0, -1};
+
+	for (int tile_y = 0; tile_y < MAP_HEIGHT; tile_y++) {
+		for (int tile_x = 0; tile_x < MAP_WIDTH; tile_x++) {
+			TileType tile_type = map->map[tile_y][tile_x];
+			if (!tile_type) tile_type = TILE_ROAD;
+
+			Rectangle cell_rect = {
+				(float) (tile_x * TILE_SIZE), (float) (tile_y * TILE_SIZE),
+				TILE_SIZE, TILE_SIZE
+			};
+
+			if (tile_type != TILE_ROAD) {
+				Color fill_color = (tile_type == TILE_GRASS)
+					                   ? GREEN
+					                   : (tile_type == TILE_BUILDING)
+						                     ? MAROON
+						                     : BLANK;
+				DrawRectangleRec(cell_rect, fill_color);
+				continue;
+			}
+
+			// How many road tiles in a row continue from this tile in each direction.
+			int road_tiles_ahead[DIRECTION_COUNT] = {0};
+			for (int direction = 0; direction < DIRECTION_COUNT; direction++) {
+				for (int distance = 1; distance < MAX_LOOKAHEAD; distance++) {
+					int neighbor_x = tile_x + STEP_X[direction] * distance;
+					int neighbor_y = tile_y + STEP_Y[direction] * distance;
+
+					bool out_of_bounds = neighbor_x < 0 || neighbor_x >= MAP_WIDTH ||
+					                     neighbor_y < 0 || neighbor_y >= MAP_HEIGHT;
+					if (out_of_bounds) break;
+
+					TileType neighbor_type = map->map[neighbor_y][neighbor_x];
+					if (neighbor_type && neighbor_type != TILE_ROAD) break;
+
+					road_tiles_ahead[direction]++;
+				}
+			}
+
+			int horizontal_extent = 1 + road_tiles_ahead[EAST] + road_tiles_ahead[WEST];
+			int vertical_extent = 1 + road_tiles_ahead[SOUTH] + road_tiles_ahead[NORTH];
+			bool runs_vertically = vertical_extent > horizontal_extent;
+			int road_width = runs_vertically ? horizontal_extent : vertical_extent;
+
+			Texture2D texture = map->road_texture;
+			float rotation = runs_vertically ? 0.0f : 90.0f; // align plain road with its direction
+
+			bool has_clear_direction = horizontal_extent != vertical_extent;
+			if (has_clear_direction && road_width == 2) {
+				// Two-lane road: the stripe faces the neighbouring lane.
+				texture = map->striped_road_texture;
+				if (runs_vertically) rotation = road_tiles_ahead[EAST] > 0 ? 0.0f : 180.0f;
+				else rotation = road_tiles_ahead[SOUTH] > 0 ? 90.0f : 270.0f;
+			}
+
+			Rectangle source_rect = {0, 0, (float) texture.width, (float) texture.height};
+			Rectangle dest_rect = {
+				cell_rect.x + TILE_SIZE / 2.0f, cell_rect.y + TILE_SIZE / 2.0f,
+				TILE_SIZE, TILE_SIZE
+			};
+			Vector2 rotation_pivot = {TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}; // rotate around the tile centre
+
+			DrawTexturePro(texture, source_rect, dest_rect, rotation_pivot, rotation, WHITE);
 		}
 	}
 }

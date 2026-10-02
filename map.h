@@ -10,6 +10,7 @@
 #define MIN_CITY_BLOCK 16
 #define MAX_BSP_DEPTH 4
 #define MAX_BSP_NODES ((1 << (MAX_BSP_DEPTH + 1)) - 1) // max nodes of a binary tree is 2^(d+1) - 1
+#include <raylib.h>
 
 typedef struct {
 	int x, y;
@@ -26,11 +27,13 @@ typedef enum { TILE_GRASS = 1, TILE_BUILDING, TILE_ROAD, TILE_ALLEY } TileType;
 typedef struct {
 	TileType map[MAP_WIDTH][MAP_HEIGHT];
 	BSPNode nodes[MAX_BSP_NODES];
+	Texture2D road_texture;
+	Texture2D striped_road_texture;
 } Map;
 
-Map map_init();
+Map map_init(const char* road_texture, const char* striped_road_texture);
 
-void map_draw(Map* map);
+void map_draw(const Map* map);
 
 
 #endif //CSHOOTER_MAP_H

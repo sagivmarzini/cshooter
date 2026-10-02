@@ -2,12 +2,13 @@
 
 #include "bullet.h"
 #include "camera.h"
+#include "map.h"
 #include "raymath.h"
 
 Player init_player(const char* texture_path) {
 	Player player = {0};
 	player.texture = LoadTexture(texture_path);
-	player.entity.pos = (Vector2){SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
+	player.entity.pos = (Vector2){MAP_WIDTH * TILE_SIZE / 2.0f, MAP_HEIGHT * TILE_SIZE / 2.0f};
 	player.entity.active = true;
 	player.combat.health = PLAYER_HEALTH;
 	return player;

@@ -6,9 +6,11 @@
 
 #define MAP_WIDTH 64
 #define MAP_HEIGHT 64
-#define MIN_CITY_BLOCK 8
+#define MIN_CITY_BLOCK 10
 #define MAX_BSP_DEPTH 4
 #define MAX_BSP_NODES ((1 << (MAX_BSP_DEPTH + 1)) - 1) // max nodes of a binary tree is 2^(d+1) - 1
+#define TILE_SIZE     192
+#define MAX_LOOKAHEAD 4
 
 typedef struct {
 	int x, y;
@@ -45,6 +47,8 @@ static const TileDef TILE_DEFS[TILE_COUNT] = {
 typedef struct {
 	Texture2D tiles[TILE_COUNT];
 	Texture2D striped_road; // draw-time variant, not a map tile
+	Texture2D roof_edge;
+	Texture2D roof_corner;
 } TileAtlas;
 
 typedef struct {

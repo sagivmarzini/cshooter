@@ -2,6 +2,7 @@
 
 #include <raylib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "common.h"
 
@@ -25,9 +26,12 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 		for (int y = rect.y; y < rect.y + rect.height; y++) {
 			if (x == rect.x || x == rect.x + rect.width - 1 ||
 			    y == rect.y || y == rect.y + rect.height - 1)
-				map->map[x][y] = TILE_ROAD;
+				map->tiles[x][y] = TILE_ROAD;
+			else if (x == rect.x + 1 || x == rect.x + rect.width - 2 ||
+			         y == rect.y + 1 || y == rect.y + rect.height - 2)
+				map->tiles[x][y] = TILE_SIDEWALK;
 			else
-				map->map[x][y] = type;
+				map->tiles[x][y] = type;
 		}
 	}
 
@@ -96,20 +100,24 @@ static void map_generate_city(Map* map) {
 	bsp_recursive_split(map, 0, 0);
 }
 
-Map map_init(const char* road_texture, const char* striped_road_texture, const char* grass_texture,
-             const char* roof_texture) {
-	Map map = {0};
-	map.road_texture = LoadTexture(road_texture);
-	map.striped_road_texture = LoadTexture(striped_road_texture);
-	map.grass_texture = LoadTexture(grass_texture);
-	map.roof_texture = LoadTexture(roof_texture);
-
-	map_generate_city(&map);
-
-	return map;
+void atlas_load(TileAtlas* a) {
+	for (int i = 0; i < TILE_COUNT; i++)
+		if (TILE_DEFS[i].path) a->tiles[i] = LoadTexture(TILE_DEFS[i].path);
+	a->striped_road = LoadTexture("../assets/map/striped_road.png");
 }
 
-void map_draw(const Map* map) {
+void atlas_unload(TileAtlas* a) {
+	for (int i = 0; i < TILE_COUNT; i++)
+		if (a->tiles[i].id != 0) UnloadTexture(a->tiles[i]);
+	UnloadTexture(a->striped_road);
+}
+
+void map_init(Map* map) {
+	memset(map, 0, sizeof *map);
+	map_generate_city(map);
+}
+
+void map_draw(const Map* map, const TileAtlas* atlas) {
 	enum { TILE_SIZE = 192, MAX_LOOKAHEAD = 4 };
 
 	// Compass directions in clockwise order. The stripe sits on the east edge
@@ -120,7 +128,7 @@ void map_draw(const Map* map) {
 
 	for (int tile_y = 0; tile_y < MAP_HEIGHT; tile_y++) {
 		for (int tile_x = 0; tile_x < MAP_WIDTH; tile_x++) {
-			TileType tile_type = map->map[tile_y][tile_x];
+			TileType tile_type = map->tiles[tile_x][tile_y];
 			if (!tile_type) tile_type = TILE_ROAD;
 
 			Rectangle cell_rect = {
@@ -128,7 +136,7 @@ void map_draw(const Map* map) {
 				TILE_SIZE, TILE_SIZE
 			};
 
-			Texture2D texture = map->road_texture;
+			Texture2D texture = atlas->tiles[TILE_ROAD];
 			Rectangle source_rect = {0, 0, (float) texture.width, (float) texture.height};
 			Rectangle dest_rect = {
 				cell_rect.x + TILE_SIZE / 2.0f, cell_rect.y + TILE_SIZE / 2.0f,
@@ -136,16 +144,11 @@ void map_draw(const Map* map) {
 			};
 			Vector2 rotation_pivot = {TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}; // rotate around the tile centre
 			if (tile_type != TILE_ROAD) {
-				texture = (tile_type == TILE_GRASS)
-					          ? map->grass_texture
-					          : (tile_type == TILE_BUILDING)
-						            ? map->roof_texture
-						            : map->road_texture;
-
-				DrawTexturePro(texture, source_rect, dest_rect, rotation_pivot, ((tile_x * tile_y) % 3) * 90, WHITE);
+				texture = atlas->tiles[tile_type];
+				DrawTexturePro(texture, source_rect, dest_rect, rotation_pivot,
+				               ((tile_x * tile_y) % 3) * 90, WHITE);
 				continue;
 			}
-
 			// How many road tiles in a row continue from this tile in each direction.
 			int road_tiles_ahead[DIRECTION_COUNT] = {0};
 			for (int direction = 0; direction < DIRECTION_COUNT; direction++) {
@@ -157,7 +160,7 @@ void map_draw(const Map* map) {
 					                     neighbor_y < 0 || neighbor_y >= MAP_HEIGHT;
 					if (out_of_bounds) break;
 
-					TileType neighbor_type = map->map[neighbor_y][neighbor_x];
+					TileType neighbor_type = map->tiles[neighbor_x][neighbor_y];
 					if (neighbor_type && neighbor_type != TILE_ROAD) break;
 
 					road_tiles_ahead[direction]++;
@@ -174,7 +177,7 @@ void map_draw(const Map* map) {
 			bool has_clear_direction = horizontal_extent != vertical_extent;
 			if (has_clear_direction && road_width == 2) {
 				// Two-lane road: the stripe faces the neighbouring lane.
-				texture = map->striped_road_texture;
+				texture = atlas->striped_road;
 				if (runs_vertically) rotation = road_tiles_ahead[EAST] > 0 ? 0.0f : 180.0f;
 				else rotation = road_tiles_ahead[SOUTH] > 0 ? 90.0f : 270.0f;
 			}

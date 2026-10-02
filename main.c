@@ -9,7 +9,10 @@ int main(void) {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "C Shooter");
 	SetTargetFPS(GAME_FPS);
 
-	Map map = map_init("../assets/map/road.png", "../assets/map/road_left.png", "../assets/map/grass.png", "../assets/map/roof.png");
+	static Map map; // static: too big for the stack
+	static TileAtlas atlas;
+	atlas_load(&atlas);
+	map_init(&map);
 	Player player = init_player("../assets/cop.png");
 	EnemyManager enemies = init_enemy_manager("../assets/thug.png");
 	BulletManager bullets = init_bullet_manager("../assets/bullet.png");
@@ -36,7 +39,7 @@ int main(void) {
 		ClearBackground((Color){10, 10, 10, 255});
 		BeginMode2D(*camera_get());
 
-		map_draw(&map);
+		map_draw(&map, &atlas);
 		draw_player(&player);
 		draw_enemies(&enemies);
 		draw_bullets(&bullets);
@@ -47,6 +50,7 @@ int main(void) {
 
 	// Cleanup
 	unload_player(&player);
+	atlas_unload(&atlas);
 	CloseWindow();
 
 	return 0;

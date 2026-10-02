@@ -96,10 +96,13 @@ static void map_generate_city(Map* map) {
 	bsp_recursive_split(map, 0, 0);
 }
 
-Map map_init(const char* road_texture, const char* striped_road_texture) {
+Map map_init(const char* road_texture, const char* striped_road_texture, const char* grass_texture,
+             const char* roof_texture) {
 	Map map = {0};
 	map.road_texture = LoadTexture(road_texture);
 	map.striped_road_texture = LoadTexture(striped_road_texture);
+	map.grass_texture = LoadTexture(grass_texture);
+	map.roof_texture = LoadTexture(roof_texture);
 
 	map_generate_city(&map);
 
@@ -125,13 +128,21 @@ void map_draw(const Map* map) {
 				TILE_SIZE, TILE_SIZE
 			};
 
+			Texture2D texture = map->road_texture;
+			Rectangle source_rect = {0, 0, (float) texture.width, (float) texture.height};
+			Rectangle dest_rect = {
+				cell_rect.x + TILE_SIZE / 2.0f, cell_rect.y + TILE_SIZE / 2.0f,
+				TILE_SIZE, TILE_SIZE
+			};
+			Vector2 rotation_pivot = {TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}; // rotate around the tile centre
 			if (tile_type != TILE_ROAD) {
-				Color fill_color = (tile_type == TILE_GRASS)
-					                   ? GREEN
-					                   : (tile_type == TILE_BUILDING)
-						                     ? MAROON
-						                     : BLANK;
-				DrawRectangleRec(cell_rect, fill_color);
+				texture = (tile_type == TILE_GRASS)
+					          ? map->grass_texture
+					          : (tile_type == TILE_BUILDING)
+						            ? map->roof_texture
+						            : map->road_texture;
+
+				DrawTexturePro(texture, source_rect, dest_rect, rotation_pivot, ((tile_x * tile_y) % 3) * 90, WHITE);
 				continue;
 			}
 
@@ -158,7 +169,6 @@ void map_draw(const Map* map) {
 			bool runs_vertically = vertical_extent > horizontal_extent;
 			int road_width = runs_vertically ? horizontal_extent : vertical_extent;
 
-			Texture2D texture = map->road_texture;
 			float rotation = runs_vertically ? 0.0f : 90.0f; // align plain road with its direction
 
 			bool has_clear_direction = horizontal_extent != vertical_extent;
@@ -169,12 +179,6 @@ void map_draw(const Map* map) {
 				else rotation = road_tiles_ahead[SOUTH] > 0 ? 90.0f : 270.0f;
 			}
 
-			Rectangle source_rect = {0, 0, (float) texture.width, (float) texture.height};
-			Rectangle dest_rect = {
-				cell_rect.x + TILE_SIZE / 2.0f, cell_rect.y + TILE_SIZE / 2.0f,
-				TILE_SIZE, TILE_SIZE
-			};
-			Vector2 rotation_pivot = {TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}; // rotate around the tile centre
 
 			DrawTexturePro(texture, source_rect, dest_rect, rotation_pivot, rotation, WHITE);
 		}

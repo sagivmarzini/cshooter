@@ -7,7 +7,7 @@
 
 #define MAP_WIDTH 64
 #define MAP_HEIGHT 64
-#define MIN_CITY_BLOCK 16
+#define MIN_CITY_BLOCK 8
 #define MAX_BSP_DEPTH 4
 #define MAX_BSP_NODES ((1 << (MAX_BSP_DEPTH + 1)) - 1) // max nodes of a binary tree is 2^(d+1) - 1
 #include <raylib.h>
@@ -29,9 +29,12 @@ typedef struct {
 	BSPNode nodes[MAX_BSP_NODES];
 	Texture2D road_texture;
 	Texture2D striped_road_texture;
+	Texture2D grass_texture;
+	Texture2D roof_texture;
 } Map;
 
-Map map_init(const char* road_texture, const char* striped_road_texture);
+Map map_init(const char* road_texture, const char* striped_road_texture, const char* grass_texture,
+             const char* roof_texture);
 
 void map_draw(const Map* map);
 

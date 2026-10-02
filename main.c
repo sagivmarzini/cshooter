@@ -9,7 +9,7 @@ int main(void) {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "C Shooter");
 	SetTargetFPS(GAME_FPS);
 
-	Map map = map_init("../assets/map/road.png", "../assets/map/road_left.png");
+	Map map = map_init("../assets/map/road.png", "../assets/map/road_left.png", "../assets/map/grass.png", "../assets/map/roof.png");
 	Player player = init_player("../assets/cop.png");
 	EnemyManager enemies = init_enemy_manager("../assets/thug.png");
 	BulletManager bullets = init_bullet_manager("../assets/bullet.png");

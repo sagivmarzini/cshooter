@@ -20,7 +20,7 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 		return;
 	}
 	const TileRect rect = map->nodes[node_index].rect;
-	TileType type = GetRandomValue(TILE_GRASS, TILE_BUILDING);
+	TileType type = GetRandomValue(0, 10) > 3 ? TILE_BUILDING : TILE_GRASS;
 	for (int x = rect.x; x < rect.x + rect.width; x++) {
 		for (int y = rect.y; y < rect.y + rect.height; y++) {
 			if (x == rect.x || x == rect.x + rect.width - 1 ||
@@ -105,8 +105,8 @@ Map map_init() {
 }
 
 void map_draw(Map* map) {
-	int tile_size = SCREEN_HEIGHT / MAP_HEIGHT;
-	// int tile_size = 192;
+	// int tile_size = SCREEN_HEIGHT / MAP_HEIGHT;
+	int tile_size = 192;
 	for (int x = 0; x < MAP_WIDTH; x++) {
 		for (int y = 0; y < MAP_HEIGHT; ++y) {
 			TileType type = map->map[x][y];

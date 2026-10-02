@@ -9,7 +9,7 @@
 #define MAP_HEIGHT 64
 #define MIN_CITY_BLOCK 16
 #define MAX_BSP_DEPTH 4
-#define MAX_BSP_NODES ((1 << (MAX_BSP_DEPTH + 1)) - 1) // max nodes of a binary tree is 2^(d+1)-1
+#define MAX_BSP_NODES ((1 << (MAX_BSP_DEPTH + 1)) - 1) // max nodes of a binary tree is 2^(d+1) - 1
 
 typedef struct {
 	int x, y;

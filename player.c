@@ -1,6 +1,7 @@
 #include "player.h"
 
 #include "bullet.h"
+#include "camera.h"
 #include "raymath.h"
 
 Player init_player(const char* texture_path) {
@@ -26,7 +27,7 @@ void update_player(Player* player, BulletManager* bm, float dt) {
 
 	apply_knockback(&player->entity, &player->combat, dt);
 
-	Vector2 mousePos = GetMousePosition();
+	Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), *camera_get());
 	player->entity.rotation = atan2f(mousePos.y - player->entity.pos.y, mousePos.x - player->entity.pos.x) * RAD2DEG;
 
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {

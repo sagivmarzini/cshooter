@@ -2,6 +2,8 @@
 
 #include <raymath.h>
 
+#include "camera.h"
+
 
 EnemyManager init_enemy_manager(const char* texture_path) {
 	EnemyManager em = {0};
@@ -17,10 +19,10 @@ void spawn_enemy(EnemyManager* em) {
 			Enemy* enemy = &em->enemies[i];
 			*enemy = (Enemy){0};
 
-			enemy->entity.pos = (Vector2){
-				GetRandomValue(0, 1) ? -100 : SCREEN_WIDTH + 100,
-				GetRandomValue(0, SCREEN_HEIGHT)
-			};
+			enemy->entity.pos = GetScreenToWorld2D((Vector2){
+				                                       GetRandomValue(0, 1) ? -100 : SCREEN_WIDTH + 100,
+				                                       GetRandomValue(0, SCREEN_HEIGHT)
+			                                       }, *camera_get());
 			enemy->combat.health = PLAYER_HEALTH;
 			enemy->entity.active = true;
 

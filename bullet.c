@@ -6,6 +6,7 @@
 
 #include <raymath.h>
 
+#include "camera.h"
 #include "my_math.h"
 
 
@@ -48,9 +49,10 @@ void update_bullets(BulletManager* bm, Enemy enemies[], float dt) {
 		bullet->life_timer -= dt;
 
 		// Deactivate if lifetime expires or goes off-screen
+		Vector2 bullet_screen_pos = GetWorldToScreen2D(bullet->entity.pos, *camera_get());
 		if (bullet->life_timer <= 0.0f ||
-		    bullet->entity.pos.x < 0 || bullet->entity.pos.x > SCREEN_WIDTH ||
-		    bullet->entity.pos.y < 0 || bullet->entity.pos.y > SCREEN_HEIGHT) {
+		    bullet_screen_pos.x < 0 || bullet_screen_pos.x > SCREEN_WIDTH ||
+		    bullet_screen_pos.y < 0 || bullet_screen_pos.y > SCREEN_HEIGHT) {
 			bullet->entity.active = false;
 		}
 

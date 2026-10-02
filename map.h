@@ -64,4 +64,6 @@ void map_init(Map* map);
 
 void map_draw(const Map* map, const TileAtlas* atlas);
 
+TileType tile_at(const Map* map, int x, int y);
+
 #endif //CSHOOTER_MAP_H

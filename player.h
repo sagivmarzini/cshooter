@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include "common.h"
+#include "map.h"
 
 #define PLAYER_SPEED 200.0f
 #define PLAYER_HEALTH 100
@@ -18,7 +19,7 @@ typedef struct {
 	Texture2D texture;
 } Player;
 
-Player init_player(const char* texture_path);
+Player init_player(const char* texture_path, const Map* map);
 
 void update_player(Player* player, BulletManager* bm, float dt);
 

@@ -13,7 +13,7 @@ int main(void) {
 	static TileAtlas atlas;
 	atlas_load(&atlas);
 	map_init(&map);
-	Player player = init_player("../assets/cop.png");
+	Player player = init_player("../assets/cop.png", &map);
 	EnemyManager enemies = init_enemy_manager("../assets/thug.png");
 	BulletManager bullets = init_bullet_manager("../assets/bullet.png");
 	camera_init();

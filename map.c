@@ -129,7 +129,7 @@ static bool in_bounds(int x, int y) {
 	return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT;
 }
 
-static TileType tile_at(const Map* map, int x, int y) {
+TileType tile_at(const Map* map, int x, int y) {
 	TileType type = map->tiles[x][y];
 	// return type ? type : TILE_ROAD;
 	return type;

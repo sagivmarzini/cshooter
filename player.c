@@ -5,12 +5,16 @@
 #include "map.h"
 #include "raymath.h"
 
-Player init_player(const char* texture_path) {
+Player init_player(const char* texture_path, const Map* map) {
 	Player player = {0};
 	player.texture = LoadTexture(texture_path);
 	player.entity.pos = (Vector2){MAP_WIDTH * TILE_SIZE / 2.0f, MAP_HEIGHT * TILE_SIZE / 2.0f};
 	player.entity.active = true;
 	player.combat.health = PLAYER_HEALTH;
+
+	while (tile_at(map, player.entity.pos.x / TILE_SIZE, player.entity.pos.y / TILE_SIZE) == TILE_BUILDING)
+		player.entity.pos.x -= TILE_SIZE / 2;
+
 	return player;
 }
 

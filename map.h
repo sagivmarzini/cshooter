@@ -49,20 +49,20 @@ typedef struct {
 	Texture2D striped_road; // draw-time variant, not a map tile
 	Texture2D roof_edge;
 	Texture2D roof_corner;
-} TileAtlas;
+} TileTextures;
 
 typedef struct {
 	uint8_t tiles[MAP_WIDTH][MAP_HEIGHT];
 	BSPNode nodes[MAX_BSP_NODES];
 } Map;
 
-void atlas_load(TileAtlas* a);
+void tile_textures_load(TileTextures* a);
 
-void atlas_unload(TileAtlas* a);
+void tile_textures_unload(TileTextures* a);
 
 void map_init(Map* map);
 
-void map_draw(const Map* map, const TileAtlas* atlas);
+void map_draw(const Map* map, const TileTextures* tile_textures);
 
 TileType tile_at(const Map* map, int x, int y);
 

@@ -4,54 +4,47 @@
 #include "map.h"
 #include "player.h"
 #include "camera.h"
+#include "game.h"
 
 int main(void) {
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "C Shooter");
 	SetTargetFPS(GAME_FPS);
 
-	// TODO: outsource game context to struct
-	static Map map; // static: too big for the stack
-	static TileAtlas atlas;
-	atlas_load(&atlas);
-	map_init(&map);
-	Player player = init_player("../assets/cop.png", &map);
-	EnemyManager enemies = init_enemy_manager("../assets/thug.png");
-	BulletManager bullets = init_bullet_manager("../assets/bullet.png");
-	camera_init();
+	GameContext game = {0};
+	game_context_init(&game);
 
 	bool paused = false;
-	while (!WindowShouldClose() && player.combat.health > 0) {
+	while (!WindowShouldClose() && game.player.combat.health > 0) {
 		// Update
 		float dt = GetFrameTime();
 		if (!paused) {
-			update_player(&player, &bullets, &map, dt);
-			update_enemies(&enemies, &player, &map, dt);
-			update_bullets(&bullets, enemies.enemies, &map, dt);
+			player_update(&game, dt);
+			enemies_update(&game, dt);
+			bullets_update(&game, dt);
 		}
 		if (IsKeyPressed(KEY_SPACE)) paused = !paused;
-		if (IsKeyPressed(KEY_E)) spawn_enemy(&enemies, &map);
+		if (IsKeyPressed(KEY_E)) enemy_spawn(&game.enemy_manager, &game.map);
 		if (IsKeyPressed(KEY_KP_ADD)) camera_get()->zoom = 1.f;
 		if (IsKeyPressed(KEY_KP_SUBTRACT)) camera_get()->zoom = 0.1f;
 
-		camera_get()->target = player.entity.pos;
+		camera_get()->target = game.player.entity.pos;
 
 		// Draw
 		BeginDrawing();
 		ClearBackground((Color){10, 10, 10, 255});
 		BeginMode2D(*camera_get());
 
-		map_draw(&map, &atlas);
-		draw_player(&player);
-		draw_enemies(&enemies);
-		draw_bullets(&bullets);
+		map_draw(&game.map, &game.tile_textures);
+		player_draw(&game.player);
+		enemies_draw(&game.enemy_manager);
+		bullets_draw(&game.bullet_manager);
 
 		EndMode2D();
 		EndDrawing();
 	}
 
 	// Cleanup
-	unload_player(&player);
-	atlas_unload(&atlas);
+	game_context_unload(&game);
 	CloseWindow();
 
 	return 0;

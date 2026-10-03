@@ -2,7 +2,6 @@
 
 #include <raylib.h>
 #include <stdbool.h>
-#include <string.h>
 
 // Compass directions in clockwise order. The stripe sits on the east edge
 // at 0 degrees, so (direction * 90) is the rotation that puts it on that side.
@@ -106,7 +105,7 @@ static void map_generate_city(Map* map) {
 	bsp_recursive_split(map, 0, 0);
 }
 
-void atlas_load(TileAtlas* a) {
+void tile_textures_load(TileTextures* a) {
 	for (int i = 0; i < TILE_COUNT; i++)
 		if (TILE_DEFS[i].path) a->tiles[i] = LoadTexture(TILE_DEFS[i].path);
 	a->striped_road = LoadTexture("../assets/map/striped_road.png");
@@ -114,14 +113,15 @@ void atlas_load(TileAtlas* a) {
 	a->roof_corner = LoadTexture("../assets/map/roof_corner.png");
 }
 
-void atlas_unload(TileAtlas* a) {
+void tile_textures_unload(TileTextures* a) {
 	for (int i = 0; i < TILE_COUNT; i++)
 		if (a->tiles[i].id != 0) UnloadTexture(a->tiles[i]);
 	UnloadTexture(a->striped_road);
+	UnloadTexture(a->roof_edge);
+	UnloadTexture(a->roof_corner);
 }
 
 void map_init(Map* map) {
-	memset(map, 0, sizeof *map);
 	map_generate_city(map);
 }
 
@@ -165,13 +165,13 @@ static void count_road_ahead(const Map* map, int tile_x, int tile_y,
 	}
 }
 
-static void draw_non_road_tile(const TileAtlas* atlas, TileType type,
+static void draw_non_road_tile(const TileTextures* atlas, TileType type,
                                int tile_x, int tile_y) {
 	float rotation = ((tile_x * tile_y) % 3) * 90;
 	draw_tile(atlas->tiles[type], tile_x, tile_y, rotation);
 }
 
-static void draw_road_tile(const Map* map, const TileAtlas* atlas,
+static void draw_road_tile(const Map* map, const TileTextures* atlas,
                            int tile_x, int tile_y) {
 	int ahead[DIRECTION_COUNT];
 	count_road_ahead(map, tile_x, tile_y, ahead);
@@ -195,7 +195,7 @@ static void draw_road_tile(const Map* map, const TileAtlas* atlas,
 	draw_tile(texture, tile_x, tile_y, rotation);
 }
 
-static void draw_roof_tile(const Map* map, const TileAtlas* atlas, int tile_x, int tile_y) {
+static void draw_roof_tile(const Map* map, const TileTextures* atlas, int tile_x, int tile_y) {
 	// A side is "open" if the neighbour there is not a building (the map border counts as open).
 	bool open_side[DIRECTION_COUNT];
 	int open_count = 0;
@@ -242,13 +242,13 @@ static void draw_roof_tile(const Map* map, const TileAtlas* atlas, int tile_x, i
 	draw_tile(texture, tile_x, tile_y, rotation);
 }
 
-void map_draw(const Map* map, const TileAtlas* atlas) {
+void map_draw(const Map* map, const TileTextures* tile_textures) {
 	for (int tile_y = 0; tile_y < MAP_HEIGHT; tile_y++) {
 		for (int tile_x = 0; tile_x < MAP_WIDTH; tile_x++) {
 			TileType type = tile_at(map, tile_x, tile_y);
-			if (type == TILE_ROAD) draw_road_tile(map, atlas, tile_x, tile_y);
-			else if (type == TILE_BUILDING) draw_roof_tile(map, atlas, tile_x, tile_y);
-			else draw_non_road_tile(atlas, type, tile_x, tile_y);
+			if (type == TILE_ROAD) draw_road_tile(map, tile_textures, tile_x, tile_y);
+			else if (type == TILE_BUILDING) draw_roof_tile(map, tile_textures, tile_x, tile_y);
+			else draw_non_road_tile(tile_textures, type, tile_x, tile_y);
 		}
 	}
 }

@@ -26,5 +26,6 @@ void apply_knockback(Entity* entity, Combatant* combatant, float dt) {
 }
 
 bool check_map_collision(const Map* map, Vector2 position) {
-	return tile_at(map, position.x / TILE_SIZE, position.y / TILE_SIZE) == TILE_BUILDING;
+	const TileType tile = tile_at(map, position.x / TILE_SIZE, position.y / TILE_SIZE);
+	return tile == TILE_BUILDING || tile == TILE_NONE;
 }

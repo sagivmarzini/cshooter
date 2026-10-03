@@ -6,10 +6,11 @@
 #define CSHOOTER_BULLET_H
 
 #include "common.h"
-#include "enemy.h"
 
 #define BULLET_SPEED 900.0f
 #define BULLET_LIFETIME_SECONDS 2.0f
+
+typedef struct GameContext GameContext;
 
 typedef struct {
 	Entity entity;
@@ -21,12 +22,15 @@ typedef struct BulletManager {
 	Texture2D bullet_texture;
 } BulletManager;
 
-BulletManager init_bullet_manager(const char* texture_path);
+void bullet_manager_init(BulletManager* bullet_manager, const char* texture_path);
 
-void spawn_bullet(BulletManager* bm, Vector2 position, float angle_deg);
+void bullet_spawn(BulletManager* bm, Vector2 position, float angle_deg);
 
-void update_bullets(BulletManager* bm, Enemy enemies[], const Map* map, float dt);
+void bullets_update(GameContext* game, float dt);
 
-void draw_bullets(const BulletManager* bm);
+void bullets_draw(const BulletManager* bm);
+
+void bullet_manager_unload(BulletManager* bullet_manager);
+
 
 #endif //CSHOOTER_BULLET_H

@@ -1,24 +1,24 @@
 #include "player.h"
 
+#include <string.h>
+
 #include "bullet.h"
 #include "camera.h"
+#include "game.h"
 #include "map.h"
 #include "raymath.h"
 
-Player init_player(const char* texture_path, const Map* map) {
-	Player player = {0};
-	player.texture = LoadTexture(texture_path);
-	player.entity.pos = (Vector2){MAP_WIDTH * TILE_SIZE / 2.0f, MAP_HEIGHT * TILE_SIZE / 2.0f};
-	player.entity.active = true;
-	player.combat.health = PLAYER_HEALTH;
+void player_init(Player* player, const char* texture_path, const Map* map) {
+	player->texture = LoadTexture(texture_path);
+	player->entity.pos = (Vector2){MAP_WIDTH * TILE_SIZE / 2.0f, MAP_HEIGHT * TILE_SIZE / 2.0f};
+	player->entity.active = true;
+	player->combat.health = PLAYER_HEALTH;
 
-	while (check_map_collision(map, player.entity.pos))
-		player.entity.pos.x -= TILE_SIZE / 2.f;
-
-	return player;
+	while (check_map_collision(map, player->entity.pos))
+		player->entity.pos.x -= TILE_SIZE / 2.f;
 }
 
-void update_player(Player* player, BulletManager* bm, const Map* map, float dt) {
+void player_update(GameContext* game, float dt) {
 	Vector2 direction = {0.0f, 0.0f};
 
 	if (IsKeyDown(KEY_D)) direction.x += 1.0f;
@@ -27,28 +27,30 @@ void update_player(Player* player, BulletManager* bm, const Map* map, float dt) 
 	if (IsKeyDown(KEY_W)) direction.y -= 1.0f;
 
 	Vector2 dir = Vector2Normalize(direction);
-	player->entity.vel = Vector2Scale(dir, PLAYER_SPEED);
-	Vector2 old_pos = player->entity.pos;
-	player->entity.pos = Vector2Add(player->entity.pos, Vector2Scale(player->entity.vel, dt));
-	if (check_map_collision(map, player->entity.pos))
-		player->entity.pos = old_pos;
+	game->player.entity.vel = Vector2Scale(dir, PLAYER_SPEED);
+	Vector2 old_pos = game->player.entity.pos;
+	game->player.entity.pos = Vector2Add(game->player.entity.pos, Vector2Scale(game->player.entity.vel, dt));
+	if (check_map_collision(&game->map, game->player.entity.pos))
+		game->player.entity.pos = old_pos;
 
-	apply_knockback(&player->entity, &player->combat, dt);
+	apply_knockback(&game->player.entity, &game->player.combat, dt);
 
 	Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), *camera_get());
-	player->entity.rotation = atan2f(mousePos.y - player->entity.pos.y, mousePos.x - player->entity.pos.x) * RAD2DEG;
+	game->player.entity.rotation = atan2f(mousePos.y - game->player.entity.pos.y,
+	                                      mousePos.x - game->player.entity.pos.x) * RAD2DEG;
 
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 		Vector2 gun_offset = {
-			GUN_BARREL_OFFSET * cosf(player->entity.rotation * DEG2RAD),
-			GUN_BARREL_OFFSET * sinf(player->entity.rotation * DEG2RAD)
+			GUN_BARREL_OFFSET * cosf(game->player.entity.rotation * DEG2RAD),
+			GUN_BARREL_OFFSET * sinf(game->player.entity.rotation * DEG2RAD)
 		};
 
-		spawn_bullet(bm, Vector2Add(player->entity.pos, gun_offset), player->entity.rotation);
+		bullet_spawn(&game->bullet_manager, Vector2Add(game->player.entity.pos, gun_offset),
+		             game->player.entity.rotation);
 	}
 }
 
-void draw_player(const Player* player) {
+void player_draw(const Player* player) {
 	Rectangle sourceRec = {0.0f, 0.0f, (float) player->texture.width, (float) player->texture.height};
 	Rectangle destRec = {
 		player->entity.pos.x, player->entity.pos.y, (float) player->texture.width, (float) player->texture.height
@@ -62,11 +64,11 @@ void draw_player(const Player* player) {
 	              10, GREEN);
 }
 
-void unload_player(Player* player) {
+void player_unload(Player* player) {
 	UnloadTexture(player->texture);
 }
 
-void melee_hit_player(Player* player, int damage, float angle) {
+void player_melee_hit(Player* player, int damage, float angle) {
 	player->combat.health -= damage;
 
 	player->combat.knockback_vel = calculate_knockback_velocity(player->combat.knockback_vel, angle,

@@ -13,6 +13,8 @@
 #define ENEMY_MELEE_ATTACK_DAMAGE 24.f
 #define ENEMY_HIT_COOLDOWN 1 // in seconds
 
+typedef struct GameContext GameContext;
+
 typedef struct {
 	Entity entity;
 	Combatant combat;
@@ -23,16 +25,16 @@ typedef struct {
 	Texture2D texture;
 } EnemyManager;
 
-EnemyManager init_enemy_manager(const char* texture_path);
+void enemy_manager_init(EnemyManager* enemy_manager, const char* texture_path);
 
-void spawn_enemy(EnemyManager* em, const Map* map);
+void enemy_spawn(EnemyManager* em, const Map* map);
 
-void update_enemies(EnemyManager* em, Player* player, const Map* map, float dt);
+void enemies_update(GameContext* game, float dt);
 
-void draw_enemies(const EnemyManager* em);
+void enemies_draw(const EnemyManager* em);
 
-void unload_enemies(EnemyManager* em);
+void enemy_hit(Enemy* enemy, int damage, float angle);
 
-void hit_enemy(Enemy* enemy, int damage, float angle);
+void enemy_manager_unload(EnemyManager* em);
 
 #endif //CSHOOTER_ENEMY_H

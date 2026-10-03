@@ -12,6 +12,7 @@
 #define KNOCKBACK_FRICTION 6.0f    // higher = stops faster
 
 typedef struct BulletManager BulletManager;
+typedef struct GameContext GameContext;
 
 typedef struct {
 	Entity entity;
@@ -19,14 +20,14 @@ typedef struct {
 	Texture2D texture;
 } Player;
 
-Player init_player(const char* texture_path, const Map* map);
+void player_init(Player* player, const char* texture_path, const Map* map);
 
-void update_player(Player* player, BulletManager* bm, const Map* map, float dt);
+void player_update(GameContext* game, float dt);
 
-void draw_player(const Player* player);
+void player_draw(const Player* player);
 
-void unload_player(Player* player);
+void player_unload(Player* player);
 
-void melee_hit_player(Player* player, int damage, float angle);
+void player_melee_hit(Player* player, int damage, float angle);
 
 #endif // PLAYER_H

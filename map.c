@@ -187,8 +187,8 @@ static void count_road_ahead(const Map* map, int tile_x, int tile_y,
 	}
 }
 
-static void draw_non_road_tile(const TileTextures* atlas, TileType type,
-                               int tile_x, int tile_y) {
+static void draw_normal_tile(const TileTextures* atlas, TileType type,
+                             int tile_x, int tile_y) {
 	float rotation = ((tile_x * tile_y) % 3) * 90;
 	draw_tile(atlas->tiles[type], tile_x, tile_y, rotation);
 }
@@ -281,7 +281,7 @@ void map_draw(const Map* map, const TileTextures* tile_textures) {
 			if (type == TILE_ROAD) draw_road_tile(map, tile_textures, tile_x, tile_y);
 			else if (type == TILE_BUILDING) draw_roof_tile(map, tile_textures, tile_x, tile_y);
 			else if (type == TILE_DOOR) draw_door_tile(map, tile_textures, tile_x, tile_y);
-			else draw_non_road_tile(tile_textures, type, tile_x, tile_y);
+			else draw_normal_tile(tile_textures, type, tile_x, tile_y);
 		}
 	}
 }

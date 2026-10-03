@@ -27,7 +27,7 @@ int main(void) {
 		if (IsKeyPressed(KEY_KP_ADD)) camera_get()->zoom = 1.f;
 		if (IsKeyPressed(KEY_KP_SUBTRACT)) camera_get()->zoom = 0.1f;
 
-		camera_get()->target = game.player.entity.pos;
+		camera_get()->target = game.player.entity.position;
 
 		// Draw
 		BeginDrawing();

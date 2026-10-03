@@ -16,12 +16,12 @@ void enemy_spawn(EnemyManager* em, const Map* map) {
 			*enemy = (Enemy){0};
 
 			int spawn_direction = GetRandomValue(0, 1) ? -1 : 1;
-			enemy->entity.pos = GetScreenToWorld2D((Vector2){
-				                                       spawn_direction == -1 ? -100 : SCREEN_WIDTH + 100,
-				                                       GetRandomValue(0, SCREEN_HEIGHT)
-			                                       }, *camera_get());
-			while (check_map_collision(map, enemy->entity.pos))
-				enemy->entity.pos.x += spawn_direction * TILE_SIZE / 2.f;
+			enemy->entity.position = GetScreenToWorld2D((Vector2){
+				                                            spawn_direction == -1 ? -100 : SCREEN_WIDTH + 100,
+				                                            GetRandomValue(0, SCREEN_HEIGHT)
+			                                            }, *camera_get());
+			while (check_map_collision(map, enemy->entity.position))
+				enemy->entity.position.x += spawn_direction * TILE_SIZE / 2.f;
 
 			enemy->combat.health = PLAYER_HEALTH;
 			enemy->entity.active = true;
@@ -39,26 +39,26 @@ void enemies_update(GameContext* game, float dt) {
 		enemy->combat.attack_cooldown -= dt;
 
 		// Face the player
-		enemy->entity.rotation = atan2f(game->player.entity.pos.y - enemy->entity.pos.y,
-		                                game->player.entity.pos.x - enemy->entity.pos.x) * RAD2DEG;
+		enemy->entity.rotation = atan2f(game->player.entity.position.y - enemy->entity.position.y,
+		                                game->player.entity.position.x - enemy->entity.position.x) * RAD2DEG;
 
 		float angleRad = enemy->entity.rotation * DEG2RAD;
 		Vector2 direction = {cosf(angleRad), sinf(angleRad)};
 
-		float player_distance = Vector2Length(Vector2Subtract(enemy->entity.pos, game->player.entity.pos));
+		float player_distance = Vector2Length(Vector2Subtract(enemy->entity.position, game->player.entity.position));
 		if (player_distance > ENEMY_MELEE_ATTACK_DISTANCE) {
 			enemy->entity.vel = Vector2Scale(direction, ENEMY_SPEED);
 
-			const Vector2 old_pos = enemy->entity.pos;
-			enemy->entity.pos = Vector2Add(enemy->entity.pos, Vector2Scale(enemy->entity.vel, dt));
-			if (check_map_collision(&game->map, enemy->entity.pos)) enemy->entity.pos = old_pos;
+			const Vector2 old_pos = enemy->entity.position;
+			enemy->entity.position = Vector2Add(enemy->entity.position, Vector2Scale(enemy->entity.vel, dt));
+			if (check_map_collision(&game->map, enemy->entity.position)) enemy->entity.position = old_pos;
 		} else if (enemy->combat.attack_cooldown <= 0) {
 			player_melee_hit(&game->player, ENEMY_MELEE_ATTACK_DAMAGE, enemy->entity.rotation);
 
 			enemy->combat.attack_cooldown = ENEMY_HIT_COOLDOWN;
 		}
 
-		apply_knockback(&enemy->entity, &enemy->combat, dt);
+		apply_knockback(&enemy->entity, &enemy->combat, &game->map, dt);
 	}
 }
 
@@ -69,15 +69,16 @@ void enemies_draw(const EnemyManager* em) {
 
 		Rectangle sourceRec = {0.0f, 0.0f, (float) em->texture.width, (float) em->texture.height};
 		Rectangle destRec = {
-			enemy->entity.pos.x, enemy->entity.pos.y, (float) em->texture.width, (float) em->texture.height
+			enemy->entity.position.x, enemy->entity.position.y, (float) em->texture.width, (float) em->texture.height
 		};
 		Vector2 origin = {(float) em->texture.width / 2.0f - 8, (float) em->texture.height / 2.0f};
 
 		DrawTexturePro(em->texture, sourceRec, destRec, origin, enemy->entity.rotation,
 		               Vector2Equals(enemy->combat.knockback_vel, (Vector2){0, 0}) ? WHITE : MAROON);
 
-		DrawRectangle((int) enemy->entity.pos.x - 48, (int) enemy->entity.pos.y - 64, 96, 10, GRAY);
-		DrawRectangle((int) enemy->entity.pos.x - 48, (int) enemy->entity.pos.y - 64, 96 * enemy->combat.health / 100,
+		DrawRectangle((int) enemy->entity.position.x - 48, (int) enemy->entity.position.y - 64, 96, 10, GRAY);
+		DrawRectangle((int) enemy->entity.position.x - 48, (int) enemy->entity.position.y - 64,
+		              96 * enemy->combat.health / 100,
 		              10, RED);
 	}
 }

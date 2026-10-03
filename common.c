@@ -11,11 +11,14 @@ Vector2 calculate_knockback_velocity(Vector2 knockback_vel, float angle, float f
 	return Vector2Add(knockback_vel, Vector2Scale(direction, force));
 }
 
-void apply_knockback(Entity* entity, Combatant* combatant, float dt) {
-	entity->pos = Vector2Add(
-		entity->pos,
+void apply_knockback(Entity* entity, Combatant* combatant, const Map* map, float dt) {
+	Vector2 old_pos = entity->position;
+	entity->position = Vector2Add(
+		entity->position,
 		Vector2Scale(combatant->knockback_vel, dt)
 	);
+	if (check_map_collision(map, entity->position))
+		entity->position = old_pos;
 
 	float decay = expf(-KNOCKBACK_FRICTION * dt);
 	combatant->knockback_vel = Vector2Scale(combatant->knockback_vel, decay);
@@ -25,7 +28,12 @@ void apply_knockback(Entity* entity, Combatant* combatant, float dt) {
 	}
 }
 
+
+TileType tile_at_world_position(const Map* map, Vector2 position) {
+	return tile_at(map, position.x / TILE_SIZE, position.y / TILE_SIZE);
+}
+
 bool check_map_collision(const Map* map, Vector2 position) {
-	const TileType tile = tile_at(map, position.x / TILE_SIZE, position.y / TILE_SIZE);
+	const TileType tile = tile_at_world_position(map, position);
 	return tile == TILE_BUILDING || tile == TILE_NONE;
 }

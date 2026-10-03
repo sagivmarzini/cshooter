@@ -21,7 +21,7 @@ void bullet_spawn(BulletManager* bm, Vector2 position, float angle_deg) {
 		if (!bm->bullets[i].entity.active) {
 			Bullet* b = &bm->bullets[i];
 
-			b->entity.pos = position;
+			b->entity.position = position;
 			b->entity.rotation = angle_deg;
 			b->entity.active = true;
 			b->life_timer = BULLET_LIFETIME_SECONDS;
@@ -41,25 +41,27 @@ void bullets_update(GameContext* game, float dt) {
 		Bullet* bullet = &game->bullet_manager.bullets[i];
 		if (!bullet->entity.active) continue;
 
-		bullet->entity.pos = Vector2Add(bullet->entity.pos, Vector2Scale(bullet->entity.vel, dt));
+		bullet->entity.position = Vector2Add(bullet->entity.position, Vector2Scale(bullet->entity.vel, dt));
 
 		bullet->life_timer -= dt;
 
 		// Deactivate if lifetime expires or goes off-screen
-		Vector2 bullet_screen_pos = GetWorldToScreen2D(bullet->entity.pos, *camera_get());
+		Vector2 bullet_screen_pos = GetWorldToScreen2D(bullet->entity.position, *camera_get());
 		if (bullet->life_timer <= 0.0f ||
 		    bullet_screen_pos.x < 0 || bullet_screen_pos.x > SCREEN_WIDTH ||
 		    bullet_screen_pos.y < 0 || bullet_screen_pos.y > SCREEN_HEIGHT ||
-		    check_map_collision(&game->map, bullet->entity.pos)) {
+		    check_map_collision(&game->map, bullet->entity.position)) {
 			bullet->entity.active = false;
 		}
 
 		for (int i = 0; i < MAX_ENEMIES; i++) {
 			Enemy* enemy = &game->enemy_manager.enemies[i];
-			if (CheckCollisionPointRotatedRect(bullet->entity.pos, enemy->entity.pos, 32, 64, enemy->entity.rotation)
+			if (CheckCollisionPointRotatedRect(bullet->entity.position, enemy->entity.position, 32, 64,
+			                                   enemy->entity.rotation)
 			    && enemy->combat.health > 0) {
 				// Variable damage depending on how close you hit the center of the enemy
-				int damage = (1.f - (Vector2Length(Vector2Subtract(bullet->entity.pos, enemy->entity.pos)) / 32)) * 100;
+				int damage = (1.f - (Vector2Length(Vector2Subtract(bullet->entity.position, enemy->entity.position)) /
+				                     32)) * 100;
 
 				enemy_hit(enemy, damage, bullet->entity.rotation);
 
@@ -74,7 +76,8 @@ void bullets_draw(const BulletManager* bm) {
 		if (bm->bullets[i].entity.active) {
 			Rectangle sourceRec = {0.0f, 0.0f, (float) bm->bullet_texture.width, (float) bm->bullet_texture.height};
 			Rectangle destRec = {
-				bm->bullets[i].entity.pos.x, bm->bullets[i].entity.pos.y, (float) bm->bullet_texture.width * 2,
+				bm->bullets[i].entity.position.x, bm->bullets[i].entity.position.y,
+				(float) bm->bullet_texture.width * 2,
 				(float) bm->bullet_texture.height * 2
 			};
 			Vector2 origin = {(float) bm->bullet_texture.width / 2.0f, (float) bm->bullet_texture.height / 2.0f};

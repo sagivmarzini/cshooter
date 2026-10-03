@@ -58,7 +58,10 @@ void bullets_update(GameContext* game, float dt) {
 			Enemy* enemy = &game->enemy_manager.enemies[i];
 			if (CheckCollisionPointRotatedRect(bullet->entity.pos, enemy->entity.pos, 32, 64, enemy->entity.rotation)
 			    && enemy->combat.health > 0) {
-				enemy_hit(enemy, BULLET_DAMAGE, bullet->entity.rotation);
+				// Variable damage depending on how close you hit the center of the enemy
+				int damage = (1.f - (Vector2Length(Vector2Subtract(bullet->entity.pos, enemy->entity.pos)) / 32)) * 100;
+
+				enemy_hit(enemy, damage, bullet->entity.rotation);
 
 				bullet->entity.active = false;
 			}

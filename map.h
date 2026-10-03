@@ -26,6 +26,7 @@ typedef enum {
 	TILE_NONE = 0, // unset; drawn as road
 	TILE_GRASS,
 	TILE_BUILDING,
+	TILE_DOOR,
 	TILE_ROAD,
 	TILE_SIDEWALK,
 	TILE_ALLEY,
@@ -39,6 +40,7 @@ typedef struct {
 static const TileDef TILE_DEFS[TILE_COUNT] = {
 	[TILE_GRASS] = {"../assets/map/grass.png"},
 	[TILE_BUILDING] = {"../assets/map/roof.png"},
+	[TILE_DOOR] = {"../assets/map/door.png"},
 	[TILE_ROAD] = {"../assets/map/road.png"},
 	[TILE_SIDEWALK] = {"../assets/map/sidewalk.png"},
 	[TILE_ALLEY] = {"../assets/map/road.png"},

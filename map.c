@@ -39,6 +39,28 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 			if (x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_HEIGHT - 1) map->tiles[x][y] = TILE_NONE;
 		}
 	}
+	// Add a door on a random side of a building
+	if (type == TILE_BUILDING) {
+		enum Side { SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM, SIDE_LEFT };
+		const int door_side = GetRandomValue(SIDE_TOP, SIDE_LEFT);
+		int rect_x = rect.x + 2;
+		int rect_y = rect.y + 2;
+		int width = rect.width - 4;
+		int height = rect.height - 4;
+
+		int x = door_side == SIDE_TOP || door_side == SIDE_BOTTOM
+			        ? width / 2 + rect_x
+			        : door_side == SIDE_RIGHT
+				          ? rect_x + width - 1
+				          : rect_x;
+		int y = door_side == SIDE_RIGHT || door_side == SIDE_LEFT
+			        ? height / 2 + rect_y
+			        : door_side == SIDE_TOP
+				          ? rect_y
+				          : rect_y + height - 1;
+
+		map->tiles[x][y] = TILE_DOOR;
+	}
 
 	if (depth >= MAX_BSP_DEPTH || rect.width < MIN_CITY_BLOCK || rect.height < MIN_CITY_BLOCK) {
 		return;
@@ -206,7 +228,8 @@ static void draw_roof_tile(const Map* map, const TileTextures* atlas, int tile_x
 		int neighbor_y = tile_y + STEP_Y[direction];
 
 		bool is_building = in_bounds(neighbor_x, neighbor_y) &&
-		                   tile_at(map, neighbor_x, neighbor_y) == TILE_BUILDING;
+		                   (tile_at(map, neighbor_x, neighbor_y) == TILE_BUILDING ||
+		                    tile_at(map, neighbor_x, neighbor_y) == TILE_DOOR);
 
 		open_side[direction] = !is_building;
 		if (open_side[direction]) {
@@ -242,12 +265,22 @@ static void draw_roof_tile(const Map* map, const TileTextures* atlas, int tile_x
 	draw_tile(texture, tile_x, tile_y, rotation);
 }
 
+static void draw_door_tile(const Map* map, const TileTextures* tile_textures, int tile_x, int tile_y) {
+	float rotation = 0;
+	if (in_bounds(tile_x, tile_y + 1) && tile_at(map, tile_x, tile_y + 1) != TILE_BUILDING) rotation = 90;
+	if (in_bounds(tile_x - 1, tile_y) && tile_at(map, tile_x - 1, tile_y) != TILE_BUILDING) rotation = 180;
+	if (in_bounds(tile_x, tile_y - 1) && tile_at(map, tile_x, tile_y - 1) != TILE_BUILDING) rotation = 270;
+
+	draw_tile(tile_textures->tiles[TILE_DOOR], tile_x, tile_y, rotation);
+}
+
 void map_draw(const Map* map, const TileTextures* tile_textures) {
 	for (int tile_y = 0; tile_y < MAP_HEIGHT; tile_y++) {
 		for (int tile_x = 0; tile_x < MAP_WIDTH; tile_x++) {
 			TileType type = tile_at(map, tile_x, tile_y);
 			if (type == TILE_ROAD) draw_road_tile(map, tile_textures, tile_x, tile_y);
 			else if (type == TILE_BUILDING) draw_roof_tile(map, tile_textures, tile_x, tile_y);
+			else if (type == TILE_DOOR) draw_door_tile(map, tile_textures, tile_x, tile_y);
 			else draw_non_road_tile(tile_textures, type, tile_x, tile_y);
 		}
 	}

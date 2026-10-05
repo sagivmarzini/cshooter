@@ -30,10 +30,14 @@ void player_update(GameContext* game, float dt) {
 	game->player.entity.vel = Vector2Scale(dir, PLAYER_SPEED);
 	Vector2 old_pos = game->player.entity.position;
 	game->player.entity.position = Vector2Add(game->player.entity.position, Vector2Scale(game->player.entity.vel, dt));
-	if (check_map_collision(&game->map, game->player.entity.position))
+	if (check_map_collision(get_active_map(&game->world), game->player.entity.position))
 		game->player.entity.position = old_pos;
 
-	apply_knockback(&game->player.entity, &game->player.combat, &game->map, dt);
+	if (tile_at_world_position(&game->world.city, game->player.entity.position) == TILE_DOOR)
+		world_enter_building(&game->world,
+		                     building_id_at_world_position(game->world.city.building_id, game->player.entity.position));
+
+	apply_knockback(&game->player.entity, &game->player.combat, get_active_map(&game->world), dt);
 
 	Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), *camera_get());
 	game->player.entity.rotation = atan2f(mousePos.y - game->player.entity.position.y,

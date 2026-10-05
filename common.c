@@ -33,6 +33,13 @@ TileType tile_at_world_position(const Map* map, Vector2 position) {
 	return tile_at(map, position.x / TILE_SIZE, position.y / TILE_SIZE);
 }
 
+uint8_t building_id_at_world_position(uint8_t building_id[64][64], Vector2 position) {
+	int tile_x = (int) (position.x / TILE_SIZE);
+	int tile_y = (int) (position.y / TILE_SIZE);
+
+	return building_id[tile_x][tile_y];
+}
+
 bool check_map_collision(const Map* map, Vector2 position) {
 	const TileType tile = tile_at_world_position(map, position);
 	return tile == TILE_BUILDING || tile == TILE_NONE;

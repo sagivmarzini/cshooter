@@ -23,7 +23,7 @@ int main(void) {
 			bullets_update(&game, dt);
 		}
 		if (IsKeyPressed(KEY_SPACE)) paused = !paused;
-		if (IsKeyPressed(KEY_E)) enemy_spawn(&game.enemy_manager, &game.map);
+		if (IsKeyPressed(KEY_E)) enemy_spawn(&game.enemy_manager, &game.world.city);
 		if (IsKeyPressed(KEY_KP_ADD)) camera_get()->zoom = 1.f;
 		if (IsKeyPressed(KEY_KP_SUBTRACT)) camera_get()->zoom = 0.1f;
 
@@ -34,7 +34,7 @@ int main(void) {
 		ClearBackground((Color){10, 10, 10, 255});
 		BeginMode2D(*camera_get());
 
-		map_draw(&game.map, &game.tile_textures);
+		world_draw(&game.world, &game.tile_textures);
 		player_draw(&game.player);
 		enemies_draw(&game.enemy_manager);
 		bullets_draw(&game.bullet_manager);

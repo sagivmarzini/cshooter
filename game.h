@@ -6,7 +6,7 @@
 #include "player.h"
 
 typedef struct GameContext {
-	Map map;
+	GameWorld world;
 	TileTextures tile_textures;
 	Player player;
 	EnemyManager enemy_manager;

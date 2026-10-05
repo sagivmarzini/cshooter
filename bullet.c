@@ -50,7 +50,7 @@ void bullets_update(GameContext* game, float dt) {
 		if (bullet->life_timer <= 0.0f ||
 		    bullet_screen_pos.x < 0 || bullet_screen_pos.x > SCREEN_WIDTH ||
 		    bullet_screen_pos.y < 0 || bullet_screen_pos.y > SCREEN_HEIGHT ||
-		    check_map_collision(&game->map, bullet->entity.position)) {
+		    check_map_collision(get_active_map(&game->world), bullet->entity.position)) {
 			bullet->entity.active = false;
 		}
 
@@ -61,7 +61,7 @@ void bullets_update(GameContext* game, float dt) {
 			    && enemy->combat.health > 0) {
 				// Variable damage depending on how close you hit the center of the enemy
 				int damage = (1.f - (Vector2Length(Vector2Subtract(bullet->entity.position, enemy->entity.position)) /
-				                     32)) * 100;
+				                     32)) * 110;
 
 				enemy_hit(enemy, damage, bullet->entity.rotation);
 
@@ -77,8 +77,8 @@ void bullets_draw(const BulletManager* bm) {
 			Rectangle sourceRec = {0.0f, 0.0f, (float) bm->bullet_texture.width, (float) bm->bullet_texture.height};
 			Rectangle destRec = {
 				bm->bullets[i].entity.position.x, bm->bullets[i].entity.position.y,
-				(float) bm->bullet_texture.width * 2,
-				(float) bm->bullet_texture.height * 2
+				(float) bm->bullet_texture.width,
+				(float) bm->bullet_texture.height
 			};
 			Vector2 origin = {(float) bm->bullet_texture.width / 2.0f, (float) bm->bullet_texture.height / 2.0f};
 

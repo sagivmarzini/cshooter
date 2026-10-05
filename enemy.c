@@ -51,14 +51,15 @@ void enemies_update(GameContext* game, float dt) {
 
 			const Vector2 old_pos = enemy->entity.position;
 			enemy->entity.position = Vector2Add(enemy->entity.position, Vector2Scale(enemy->entity.vel, dt));
-			if (check_map_collision(&game->map, enemy->entity.position)) enemy->entity.position = old_pos;
+			if (check_map_collision(get_active_map(&game->world), enemy->entity.position))
+				enemy->entity.position = old_pos;
 		} else if (enemy->combat.attack_cooldown <= 0) {
 			player_melee_hit(&game->player, ENEMY_MELEE_ATTACK_DAMAGE, enemy->entity.rotation);
 
 			enemy->combat.attack_cooldown = ENEMY_HIT_COOLDOWN;
 		}
 
-		apply_knockback(&enemy->entity, &enemy->combat, &game->map, dt);
+		apply_knockback(&enemy->entity, &enemy->combat, get_active_map(&game->world), dt);
 	}
 }
 

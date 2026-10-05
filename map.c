@@ -9,7 +9,9 @@ enum { EAST, SOUTH, WEST, NORTH, DIRECTION_COUNT };
 
 static const int STEP_X[DIRECTION_COUNT] = {1, 0, -1, 0};
 static const int STEP_Y[DIRECTION_COUNT] = {0, 1, 0, -1};
+
 static int next_node_index = 1;
+static int next_building_id = 1;
 
 static int get_next_node_index(void) {
 	int index = next_node_index;
@@ -37,6 +39,7 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 				map->tiles[x][y] = type;
 
 			if (x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_HEIGHT - 1) map->tiles[x][y] = TILE_NONE;
+			if (type == TILE_BUILDING) map->building_id[x][y] = next_building_id;
 		}
 	}
 	// Add a door on a random side of a building
@@ -60,6 +63,7 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 				          : rect_y + height - 1;
 
 		map->tiles[x][y] = TILE_DOOR;
+		map->building_id[x][y] = next_building_id++;
 	}
 
 	if (depth >= MAX_BSP_DEPTH || rect.width < MIN_CITY_BLOCK || rect.height < MIN_CITY_BLOCK) {
@@ -71,7 +75,7 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 	else if (rect.height > rect.width * 1.25) is_vertical_cut = false;
 	else is_vertical_cut = GetRandomValue(0, 1);
 
-	int cut_percent = GetRandomValue(3, 7);
+	int cut_percent = GetRandomValue(4, 6);
 
 	TileRect rect1 = {0};
 	TileRect rect2 = {0};
@@ -119,12 +123,16 @@ static void bsp_recursive_split(Map* map, int node_index, int depth) {
 	bsp_recursive_split(map, right_index, depth + 1);
 }
 
-static void map_generate_city(Map* map) {
+void map_generate_city(Map* map) {
 	map->nodes[0].rect = (TileRect){0, 0, MAP_WIDTH, MAP_HEIGHT};
 	map->nodes[0].left = -1;
 	map->nodes[0].right = -1;
 
 	bsp_recursive_split(map, 0, 0);
+}
+
+void world_enter_building(GameWorld* world, uint8_t building_id) {
+ // TODO: implement interiors
 }
 
 void tile_textures_load(TileTextures* a) {
@@ -143,10 +151,6 @@ void tile_textures_unload(TileTextures* a) {
 	UnloadTexture(a->roof_corner);
 }
 
-void map_init(Map* map) {
-	map_generate_city(map);
-}
-
 static bool in_bounds(int x, int y) {
 	return x >= 0 && x < MAP_WIDTH && y >= 0 && y < MAP_HEIGHT;
 }
@@ -155,6 +159,10 @@ TileType tile_at(const Map* map, int x, int y) {
 	TileType type = map->tiles[x][y];
 	// return type ? type : TILE_ROAD;
 	return type;
+}
+
+Map* get_active_map(GameWorld* world) {
+	return world->is_player_inside ? &world->interiors[world->current_building].map : &world->city;
 }
 
 
@@ -274,13 +282,13 @@ static void draw_door_tile(const Map* map, const TileTextures* tile_textures, in
 	draw_tile(tile_textures->tiles[TILE_DOOR], tile_x, tile_y, rotation);
 }
 
-void map_draw(const Map* map, const TileTextures* tile_textures) {
+void world_draw(const GameWorld* world, const TileTextures* tile_textures) {
 	for (int tile_y = 0; tile_y < MAP_HEIGHT; tile_y++) {
 		for (int tile_x = 0; tile_x < MAP_WIDTH; tile_x++) {
-			TileType type = tile_at(map, tile_x, tile_y);
-			if (type == TILE_ROAD) draw_road_tile(map, tile_textures, tile_x, tile_y);
-			else if (type == TILE_BUILDING) draw_roof_tile(map, tile_textures, tile_x, tile_y);
-			else if (type == TILE_DOOR) draw_door_tile(map, tile_textures, tile_x, tile_y);
+			TileType type = tile_at(get_active_map(world), tile_x, tile_y);
+			if (type == TILE_ROAD) draw_road_tile(&world->city, tile_textures, tile_x, tile_y);
+			else if (type == TILE_BUILDING) draw_roof_tile(&world->city, tile_textures, tile_x, tile_y);
+			else if (type == TILE_DOOR) draw_door_tile(&world->city, tile_textures, tile_x, tile_y);
 			else draw_normal_tile(tile_textures, type, tile_x, tile_y);
 		}
 	}

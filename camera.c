@@ -6,7 +6,7 @@ static Camera2D g_camera;
 
 void camera_init(void) {
 	g_camera.offset = (Vector2){SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
-	g_camera.zoom = 1.0f;
+	g_camera.zoom = 1.5f;
 }
 
 Camera2D* camera_get(void) { return &g_camera; }

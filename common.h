@@ -30,6 +30,8 @@ void apply_knockback(Entity* entity, Combatant* combatant, const Map* map, float
 
 TileType tile_at_world_position(const Map* map, Vector2 position);
 
+uint8_t building_id_at_world_position(uint8_t building_id[MAP_WIDTH][MAP_HEIGHT], Vector2 position);
+
 bool check_map_collision(const Map* map, Vector2 position);
 
 

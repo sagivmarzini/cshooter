@@ -24,7 +24,7 @@ int main(void) {
 		}
 		if (IsKeyPressed(KEY_SPACE)) paused = !paused;
 		if (IsKeyPressed(KEY_E)) enemy_spawn(&game.enemy_manager, &game.world.city);
-		if (IsKeyPressed(KEY_KP_ADD)) camera_get()->zoom = 1.f;
+		if (IsKeyPressed(KEY_KP_ADD)) camera_get()->zoom = 1.5f;
 		if (IsKeyPressed(KEY_KP_SUBTRACT)) camera_get()->zoom = 0.1f;
 
 		camera_get()->target = game.player.entity.position;

@@ -4,6 +4,9 @@
 #include "common.h"
 #include "map.h"
 
+#define PLAYER_IDLE_TEXTURE "../assets/cop_idle.png"
+#define PLAYER_SHOOTING_TEXTURE "../assets/cop_shooting.png"
+
 #define PLAYER_SPEED 200.0f
 #define PLAYER_HEALTH 100
 #define GUN_BARREL_OFFSET 32 // the distance between the center of the sprite and the tip of its gun
@@ -17,10 +20,12 @@ typedef struct GameContext GameContext;
 typedef struct {
 	Entity entity;
 	Combatant combat;
-	Texture2D texture;
+	Texture2D idle_texture;
+	Texture2D shooting_texture;
+	bool is_aiming;
 } Player;
 
-void player_init(Player* player, const char* texture_path, const Map* map);
+void player_init(Player* player, const Map* map);
 
 void player_update(GameContext* game, float dt);
 

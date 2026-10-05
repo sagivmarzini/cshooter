@@ -1,15 +1,14 @@
 #include "player.h"
-
-#include <string.h>
-
 #include "bullet.h"
 #include "camera.h"
 #include "game.h"
 #include "map.h"
 #include "raymath.h"
 
-void player_init(Player* player, const char* texture_path, const Map* map) {
-	player->texture = LoadTexture(texture_path);
+void player_init(Player* player, const Map* map) {
+	player->idle_texture = LoadTexture(PLAYER_IDLE_TEXTURE);
+	player->shooting_texture = LoadTexture(PLAYER_SHOOTING_TEXTURE);
+
 	player->entity.position = (Vector2){MAP_WIDTH * TILE_SIZE / 2.0f, MAP_HEIGHT * TILE_SIZE / 2.0f};
 	player->entity.active = true;
 	player->combat.health = PLAYER_HEALTH;
@@ -21,6 +20,7 @@ void player_init(Player* player, const char* texture_path, const Map* map) {
 void player_update(GameContext* game, float dt) {
 	Vector2 direction = {0.0f, 0.0f};
 
+	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) game->player.is_aiming = !game->player.is_aiming;
 	if (IsKeyDown(KEY_D)) direction.x += 1.0f;
 	if (IsKeyDown(KEY_A)) direction.x -= 1.0f;
 	if (IsKeyDown(KEY_S)) direction.y += 1.0f;
@@ -43,7 +43,7 @@ void player_update(GameContext* game, float dt) {
 	game->player.entity.rotation = atan2f(mousePos.y - game->player.entity.position.y,
 	                                      mousePos.x - game->player.entity.position.x) * RAD2DEG;
 
-	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+	if (game->player.is_aiming && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
 		Vector2 gun_offset = {
 			GUN_BARREL_OFFSET * cosf(game->player.entity.rotation * DEG2RAD),
 			GUN_BARREL_OFFSET * sinf(game->player.entity.rotation * DEG2RAD)
@@ -55,14 +55,16 @@ void player_update(GameContext* game, float dt) {
 }
 
 void player_draw(const Player* player) {
-	Rectangle sourceRec = {0.0f, 0.0f, (float) player->texture.width, (float) player->texture.height};
-	Rectangle destRec = {
-		player->entity.position.x, player->entity.position.y, (float) player->texture.width,
-		(float) player->texture.height
-	};
-	Vector2 origin = {(float) player->texture.width / 2.0f - 8, (float) player->texture.height / 2.0f};
+	const Texture2D texture = player->is_aiming ? player->shooting_texture : player->idle_texture;
 
-	DrawTexturePro(player->texture, sourceRec, destRec, origin, player->entity.rotation,
+	Rectangle sourceRec = {0.0f, 0.0f, (float) texture.width, (float) texture.height};
+	Rectangle destRec = {
+		player->entity.position.x, player->entity.position.y, (float) texture.width,
+		(float) texture.height
+	};
+	Vector2 origin = {(float) texture.width / 2.0f - 8, (float) texture.height / 2.0f};
+
+	DrawTexturePro(texture, sourceRec, destRec, origin, player->entity.rotation,
 	               Vector2Equals(player->combat.knockback_vel, (Vector2){0, 0}) ? WHITE : MAROON);
 	DrawRectangle((int) player->entity.position.x - 48, (int) player->entity.position.y - 64, 96, 10, GRAY);
 	DrawRectangle((int) player->entity.position.x - 48, (int) player->entity.position.y - 64,
@@ -71,7 +73,8 @@ void player_draw(const Player* player) {
 }
 
 void player_unload(Player* player) {
-	UnloadTexture(player->texture);
+	UnloadTexture(player->idle_texture);
+	UnloadTexture(player->shooting_texture);
 }
 
 void player_melee_hit(Player* player, int damage, float angle) {

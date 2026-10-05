@@ -8,6 +8,7 @@
 #define PLAYER_SHOOTING_TEXTURE "../assets/cop_shooting.png"
 
 #define PLAYER_SPEED 200.0f
+#define PLAYER_AIMING_SPEED 100.f
 #define PLAYER_HEALTH 100
 #define GUN_BARREL_OFFSET 32 // the distance between the center of the sprite and the tip of its gun
 #define MELEE_KNOCKBACK_FORCE   800.0f   // initial push speed

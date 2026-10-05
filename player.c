@@ -27,7 +27,7 @@ void player_update(GameContext* game, float dt) {
 	if (IsKeyDown(KEY_W)) direction.y -= 1.0f;
 
 	Vector2 dir = Vector2Normalize(direction);
-	game->player.entity.vel = Vector2Scale(dir, PLAYER_SPEED);
+	game->player.entity.vel = Vector2Scale(dir, game->player.is_aiming ? PLAYER_AIMING_SPEED : PLAYER_SPEED);
 	Vector2 old_pos = game->player.entity.position;
 	game->player.entity.position = Vector2Add(game->player.entity.position, Vector2Scale(game->player.entity.vel, dt));
 	if (check_map_collision(get_active_map(&game->world), game->player.entity.position))

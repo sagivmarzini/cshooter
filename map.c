@@ -21,101 +21,133 @@ static int get_next_node_index(void) {
 	return index;
 }
 
-static void bsp_recursive_split(Map* map, int node_index, int depth) {
-	if (map->nodes[node_index].left != -1 || map->nodes[node_index].right != -1) {
-		return;
+typedef enum { SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM, SIDE_LEFT } Side;
+
+static inline int min_int(int a, int b) { return a < b ? a : b; }
+
+static bool is_map_edge(int x, int y) {
+	return x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1;
+}
+
+static TileRect inset_rect(TileRect r, int amount) {
+	return (TileRect){
+		r.x + amount, r.y + amount,
+		r.width - 2 * amount, r.height - 2 * amount
+	};
+}
+
+// Splits r in two along one axis. `gap` tiles between the halves are left
+// uncovered (0 for BSP cuts, 1 for an alley strip).
+static void split_rect(TileRect r, bool vertical, int gap, int percent,
+                       TileRect* a, TileRect* b) {
+	if (vertical) {
+		int size = r.width * percent / 10;
+		*a = (TileRect){r.x, r.y, size, r.height};
+		*b = (TileRect){r.x + size + gap, r.y, r.width - size - gap, r.height};
+	} else {
+		int size = r.height * percent / 10;
+		*a = (TileRect){r.x, r.y, r.width, size};
+		*b = (TileRect){r.x, r.y + size + gap, r.width, r.height - size - gap};
 	}
-	const TileRect rect = map->nodes[node_index].rect;
-	TileType type = GetRandomValue(0, 10) > 3 ? TILE_BUILDING : TILE_GRASS;
+}
+
+// Road ring -> sidewalk ring -> fill. Also resets stale building ids.
+static void paint_block(Map* map, TileRect rect, TileType fill) {
 	for (int x = rect.x; x < rect.x + rect.width; x++) {
 		for (int y = rect.y; y < rect.y + rect.height; y++) {
-			if (x == rect.x || x == rect.x + rect.width - 1 ||
-			    y == rect.y || y == rect.y + rect.height - 1)
-				map->tiles[x][y] = TILE_ROAD;
-			else if (x == rect.x + 1 || x == rect.x + rect.width - 2 ||
-			         y == rect.y + 1 || y == rect.y + rect.height - 2)
-				map->tiles[x][y] = TILE_SIDEWALK;
-			else
-				map->tiles[x][y] = type;
-
-			if (x == 0 || x == MAP_WIDTH - 1 || y == 0 || y == MAP_HEIGHT - 1) map->tiles[x][y] = TILE_NONE;
-			if (type == TILE_BUILDING) map->building_id[x][y] = next_building_id;
+			int ring = min_int(min_int(x - rect.x, rect.x + rect.width - 1 - x),
+			                   min_int(y - rect.y, rect.y + rect.height - 1 - y));
+			TileType t = ring == 0 ? TILE_ROAD : ring == 1 ? TILE_SIDEWALK : fill;
+			map->tiles[x][y] = is_map_edge(x, y) ? TILE_NONE : t;
+			map->building_id[x][y] = NO_BUILDING_ID;
 		}
 	}
-	// Add a door on a random side of a building
-	if (type == TILE_BUILDING) {
-		enum Side { SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM, SIDE_LEFT };
-		const int door_side = GetRandomValue(SIDE_TOP, SIDE_LEFT);
-		int rect_x = rect.x + 2;
-		int rect_y = rect.y + 2;
-		int width = rect.width - 4;
-		int height = rect.height - 4;
+}
 
-		int x = door_side == SIDE_TOP || door_side == SIDE_BOTTOM
-			        ? width / 2 + rect_x
-			        : door_side == SIDE_RIGHT
-				          ? rect_x + width - 1
-				          : rect_x;
-		int y = door_side == SIDE_RIGHT || door_side == SIDE_LEFT
-			        ? height / 2 + rect_y
-			        : door_side == SIDE_TOP
-				          ? rect_y
-				          : rect_y + height - 1;
+static void place_door(Map* map, TileRect part, Side side) {
+	int x = part.x + part.width / 2;
+	int y = part.y + part.height / 2;
+	switch (side) {
+		case SIDE_TOP: y = part.y;
+			break;
+		case SIDE_BOTTOM: y = part.y + part.height - 1;
+			break;
+		case SIDE_LEFT: x = part.x;
+			break;
+		case SIDE_RIGHT: x = part.x + part.width - 1;
+			break;
+	}
+	map->tiles[x][y] = TILE_DOOR;
+}
 
-		map->tiles[x][y] = TILE_DOOR;
-		map->building_id[x][y] = next_building_id++;
+// Optionally cuts the footprint in two with an alley, then gives every
+// resulting part its own building id and its own door.
+static void build_building(Map* map, TileRect footprint) {
+	TileRect parts[2] = {footprint};
+	int part_count = 1;
+
+	if ((footprint.width > MIN_ALLEY_BUILDING_SIZE ||
+	     footprint.height > MIN_ALLEY_BUILDING_SIZE) && GetRandomValue(0, 1)) {
+		bool vertical = footprint.width > footprint.height;
+		split_rect(footprint, vertical, 1, GetRandomValue(4, 6), &parts[0], &parts[1]);
+		part_count = 2;
+
+		// The alley is the 1-tile strip between the two parts.
+		if (vertical) {
+			int x = parts[0].x + parts[0].width;
+			for (int y = footprint.y; y < footprint.y + footprint.height; y++)
+				map->tiles[x][y] = TILE_ALLEY;
+		} else {
+			int y = parts[0].y + parts[0].height;
+			for (int x = footprint.x; x < footprint.x + footprint.width; x++)
+				map->tiles[x][y] = TILE_ALLEY;
+		}
 	}
 
-	if (depth >= MAX_BSP_DEPTH || rect.width < MIN_CITY_BLOCK || rect.height < MIN_CITY_BLOCK) {
+	for (int i = 0; i < part_count; i++) {
+		const TileRect p = parts[i];
+		const int id = next_building_id++;
+		for (int x = p.x; x < p.x + p.width; x++)
+			for (int y = p.y; y < p.y + p.height; y++)
+				map->building_id[x][y] = id;
+
+		place_door(map, p, (Side) GetRandomValue(SIDE_TOP, SIDE_LEFT));
+	}
+}
+
+static void bsp_recursive_split(Map* map, int node_index, int depth) {
+	const TileRect rect = map->nodes[node_index].rect;
+
+	bool vertical_cut;
+	if (rect.width > rect.height * 1.25) vertical_cut = true;
+	else if (rect.height > rect.width * 1.25) vertical_cut = false;
+	else vertical_cut = GetRandomValue(0, 1);
+
+	// The smaller child gets 40% of the cut axis; it must still be a valid block.
+	const int cut_axis_len = vertical_cut ? rect.width : rect.height;
+	const bool can_split = depth < MAX_BSP_DEPTH &&
+	                       cut_axis_len * 4 / 10 >= MIN_CITY_BLOCK &&
+	                       rect.width >= MIN_CITY_BLOCK && rect.height >= MIN_CITY_BLOCK;
+
+	if (!can_split) {
+		// Only leaves are painted; internal nodes are fully covered by their children.
+		const TileRect footprint = inset_rect(rect, BLOCK_INSET);
+		const bool has_building = footprint.width >= MIN_BUILDING_SIZE &&
+		                          footprint.height >= MIN_BUILDING_SIZE &&
+		                          GetRandomValue(1, 100) <= BUILDING_CHANCE_PERCENT;
+
+		paint_block(map, rect, has_building ? TILE_BUILDING : TILE_GRASS);
+		if (has_building) build_building(map, footprint);
 		return;
 	}
 
-	bool is_vertical_cut = false; // otherwise horizontal cut
-	if (rect.width > rect.height * 1.25) is_vertical_cut = true;
-	else if (rect.height > rect.width * 1.25) is_vertical_cut = false;
-	else is_vertical_cut = GetRandomValue(0, 1);
+	TileRect rect1, rect2;
+	split_rect(rect, vertical_cut, 0, GetRandomValue(4, 6), &rect1, &rect2);
 
-	int cut_percent = GetRandomValue(4, 6);
-
-	TileRect rect1 = {0};
-	TileRect rect2 = {0};
-
-	if (is_vertical_cut) {
-		int split_size = (rect.width * cut_percent) / 10;
-
-		// Left Child
-		rect1.x = rect.x;
-		rect1.y = rect.y;
-		rect1.width = split_size;
-		rect1.height = rect.height;
-
-		// Right Child
-		rect2.x = rect.x + split_size;
-		rect2.y = rect.y;
-		rect2.width = rect.width - split_size;
-		rect2.height = rect.height;
-	} else {
-		int split_size_y = (rect.height * cut_percent) / 10;
-
-		// Top Child
-		rect1.x = rect.x;
-		rect1.y = rect.y;
-		rect1.width = rect.width;
-		rect1.height = split_size_y;
-
-		// Bottom Child
-		rect2.x = rect.x;
-		rect2.y = rect.y + split_size_y;
-		rect2.width = rect.width;
-		rect2.height = rect.height - split_size_y;
-	}
-
-	int left_index = get_next_node_index();
-	int right_index = get_next_node_index();
-
+	const int left_index = get_next_node_index();
+	const int right_index = get_next_node_index();
 	map->nodes[node_index].left = left_index;
 	map->nodes[node_index].right = right_index;
-
 	map->nodes[left_index] = (BSPNode){rect1, -1, -1};
 	map->nodes[right_index] = (BSPNode){rect2, -1, -1};
 
@@ -132,7 +164,7 @@ void map_generate_city(Map* map) {
 }
 
 void world_enter_building(GameWorld* world, uint8_t building_id) {
- // TODO: implement interiors
+	// TODO: implement interiors
 }
 
 void tile_textures_load(TileTextures* a) {

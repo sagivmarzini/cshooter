@@ -12,6 +12,12 @@
 #define TILE_SIZE 144
 #define MAX_LOOKAHEAD 4
 
+#define NO_BUILDING_ID          (0)
+#define BLOCK_INSET             2      // road ring + sidewalk ring
+#define MIN_BUILDING_SIZE       3      // smaller than this can't hold a door
+#define MIN_ALLEY_BUILDING_SIZE 10     // both dimensions must exceed this to get an alley
+#define BUILDING_CHANCE_PERCENT 65
+
 typedef struct {
 	int x, y;
 	int width, height;
@@ -49,7 +55,7 @@ static const TileDef TILE_DEFS[TILE_COUNT] = {
 	[TILE_DOOR] = {"../assets/map/door.png"},
 	[TILE_ROAD] = {"../assets/map/road.png"},
 	[TILE_SIDEWALK] = {"../assets/map/sidewalk.png"},
-	[TILE_ALLEY] = {"../assets/map/road.png"},
+	[TILE_ALLEY] = {"../assets/map/alley.png"},
 
 	// Interior
 	[TILE_FLOOR] = {"../assets/map/sidewalk.png"},
